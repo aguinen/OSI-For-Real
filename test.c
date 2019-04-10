@@ -1,13 +1,25 @@
 // ************************************************************
+<<<<<<< HEAD
 // Jacob Terren, Brian, Cam and Angus
 // 300961195, 300957753, 300961566, 300924323
 // CSCI.465: Operating Systems Internals
 // Homework #2
 // 4/10/2019
+=======
+// Jacob Terren
+// 300961195
+// CSCI.465: Operating Systems Internals
+// Homework #1
+// 2/9/18
+>>>>>>> testBranch
 // Program Description:
-// The purpose of this program is to create a MTOPS machine simulator.
+// The purpose of this program is to create a HYPO machine simulator.
 // It will be able to execute machine language programs, utilizing
+<<<<<<< HEAD
 // the memory made available to the MTOPS Sim., "hardware" registers,
+=======
+// the memory made available to the HYPO Sim., "hardware" registers,
+>>>>>>> testBranch
 // and various functions (ADD, SUB, DIV, MULT, FETCH, etc.)
 // ************************************************************
 
@@ -118,8 +130,13 @@
 	long pc;							//Program Counter
 	long sp;							//Stack Pointer
 	struct ProgramInfo Progs[10];	//ProgramInfo object
+<<<<<<< HEAD
 	struct ProgramInfo CurrProg;	//holds the current process ID for use
 	long progsIndex = 0;					//Holds index of the Progs[] array
+=======
+	struct ProgramInfo CurrProg;
+	long progsIndex = 0;
+>>>>>>> testBranch
 	struct InstructionInfo Op;			//InstructionInfo object
 	long RQ = END_OF_LIST;				//Initialize Ready Queue to EndOfList (-1)
 	long WQ = END_OF_LIST;				//Initialize Waiting Queue to EndOfList (-1)
@@ -254,7 +271,6 @@ int main()	//Start of main function
 		printReadyQueue(rhead);
 		printWaitingQueue(whead);
 		//Dumps Dynamic Memory Area before CPU Scheduling
-		//DumpMemory("Dynamic Memory Area: Before CPU Scheduling",3000, 199);		
 
 		// Select next process from RQ to give CPU
 		RunningPCBptr = SelectProcessFromRQ();  // call the function
@@ -264,24 +280,39 @@ int main()	//Start of main function
 
 		printReadyQueue(rhead);			//Dumps Ready Queue After Selecting Process from RQ
 		PrintPCB(RunningPCBptr);		//Dump Running PCB and CPU Context passing
-		DumpMemory("Before executing user program", 0, 100);
+		DumpMemory("Before executing user program", 0, 199);	//Dumps Main Memory from adress 0 to address 99 after executing test program
+		DumpMemory("1LOOK IN MY PANTS BITCHESS", 3000, 199);
+		DumpMemory("2LOOK IN MY PANTS BITCHESS", 7000, 199);
 		ExeCompStat = fetchProgInfo(RunningPCBptr);
 		if(ExeCompStat == OK)
 		{
 			ExeCompStat = CPU();	//Calls CPU() to execute test program
+<<<<<<< HEAD
+=======
+			saveContext(RunningPCBptr);  // running process is losing CPU
+>>>>>>> testBranch
 		}
 		else
 		{
 			printf("Failed to find PID");
 		}
 
+<<<<<<< HEAD
 		DumpMemory("After executing user program", 0, 100);	//Dumps Main Memory from adress 0 to address 99 after executing test program
+=======
+		DumpMemory("After executing user program", 0, 199);	//Dumps Main Memory from adress 0 to address 99 after executing test program
+		DumpMemory("3LOOK IN MY PANTS BITCHESS", 3000, 199);
+		DumpMemory("4LOOK IN MY PANTS BITCHESS", 7000, 199);
+>>>>>>> testBranch
 
 		// Check return status reason for giving up CPU
 		if(ExeCompStat == TIME_DEPLETED)
 		{
 			printf("AFter CPU() PCBptr: %ld\n", RunningPCBptr);
+<<<<<<< HEAD
 			saveContext(RunningPCBptr);  // running process is losing CPU
+=======
+>>>>>>> testBranch
 			InsertIntoRQ(RunningPCBptr);
 			printf("Came out of InsertIntoRQ\n");
 			RunningPCBptr = END_OF_LIST;
@@ -301,6 +332,7 @@ int main()	//Start of main function
 		{
 			MemArray[RunningPCBptr + WAITING_CODE] = Output_Operation_Event_Code;
 			InsertIntoWQ(RunningPCBptr);
+
 			RunningPCBptr = END_OF_LIST;
 		}
 		else
@@ -860,6 +892,7 @@ long CPU()
 				{
 					sp++;	//Increment SP
 					MemArray[sp] = Op.Op1Value;	//Save Operand 1 value to Main Memory at address SP
+					printf("Pushed value: %ld\n", MemArray[sp]);
 				}
 
 				Clock += 2;	//Increment clock by 2
@@ -885,6 +918,10 @@ long CPU()
 				{
 					Op.Op1Value = MemArray[sp];	//Save content in Main Memory at address SP to Operand 1 value
 					MemArray[sp] = 0;
+<<<<<<< HEAD
+=======
+					printf("Value popped: %ld\n", Op.Op1Value);
+>>>>>>> testBranch
 					sp--;	//Decrement SP
 				}
 
@@ -901,10 +938,20 @@ long CPU()
 				status = SystemCall(Op.OpValue);
 				if(status == Input_Operation_Event_Code)
 				{
+<<<<<<< HEAD
+=======
+					Clock += 2;	//Increment clock by 2
+					TimeLeft -= 2;
+>>>>>>> testBranch
 					return Input_Operation_Event_Code;
 				}
 				else if(status == Output_Operation_Event_Code)
 				{
+<<<<<<< HEAD
+=======
+					Clock += 2;	//Increment clock by 2
+					TimeLeft -= 2;
+>>>>>>> testBranch
 					return Output_Operation_Event_Code;
 				} 
 				Clock += 2;	//Increment clock by 2
@@ -1074,14 +1121,24 @@ long size)
 
 	if(StartAddress < 0 || size > 10000 || (StartAddress + size) > 10000)	//If range is not valid throw error
 	{
+<<<<<<< HEAD
 		printf("Invalid range parameters for DumpMemory() function, try again.");	//prints error statements
 		return(ER_INVALID_RANGE);																						//returns invalid range error
+=======
+		printf("Invalid range parameters for DumpMemory() function, try again.");
+		return(ER_INVALID_RANGE);	//returns invalid range error
+>>>>>>> testBranch
 	}
 
 	printf("GPR:\tG0\tG1\tG2\tG3\tG4\tG5\tG6\tG7\tSP\tPC\n\t"); //Displays GPRs, SP, & PC header
 
+<<<<<<< HEAD
 	for(int i = 0; i < 8; i++)	//Declares for loop to print out all registers
 		printf("%ld\t", gpr[i]);	//print statement
+=======
+	for(int i = 0; i < 8; i++)	//Displays GPRs
+		printf("%ld\t", gpr[i]);
+>>>>>>> testBranch
 
 	printf("%ld\t%ld\n", sp, pc);	//Displays SP, & PC
 
@@ -1090,9 +1147,11 @@ long size)
 	for(int x = StartAddress; x < (StartAddress+size); x += 10)	//Displays contents of main memory in given range
 	{															//Increments by 10 to display as address side-header
 		printf("\n%d\t", x);	//Displays address header as multiples of 10
-		
 		for(int y = 0; y < 10; y++)		//Displays contents of main memory
+<<<<<<< HEAD
 			
+=======
+>>>>>>> testBranch
 			printf("%ld\t", MemArray[x+y]);
 	}
 	printf("\nClock:\t%ld", Clock);	//Displays value of Clock
@@ -1122,11 +1181,19 @@ long size)
 // ************************************************************
 long SystemCall(long SystemCallID)
 {
+<<<<<<< HEAD
 	//local variables
 	psr = OS_MODE;	// Set system mode to OS mode
 	long status = OK; //sets a status based on global norm
 
 	switch(SystemCallID)		//declares switch statement for seperate cases
+=======
+	psr = OS_MODE;	// Set system mode to OS mode
+	//local variables
+	long status = OK;
+
+	switch(SystemCallID)
+>>>>>>> testBranch
 	{
 		case 1:		//throws an invalid sys call 
 			printf("Create Process System Call Not Implememented\n");
@@ -1176,7 +1243,11 @@ long SystemCall(long SystemCallID)
 			printf("System Call Not Implememented\n");
 		break;
 
+<<<<<<< HEAD
 		default:		//Default case to maintain style and the invalid CallId error throw
+=======
+		default:		// Invalid system call ID
+>>>>>>> testBranch
 			printf("ERROR: Invalid SystemCallID.\n");
 			status = ER_INVALID_ID;		//return the error code to the call
 			break;
@@ -1207,6 +1278,7 @@ long CreateProcess(char fileName[], long priority)	// or char * pointer
 	//Local Variables
 	long value = 0;
 	long size = 22;		//Default size of PCB
+<<<<<<< HEAD
 	long PCBptr;			//Declares a variable that contains the first memory addr of the PCB
 	long ptr;					//Declares pointer that contains the first mem addr of main memory
 
@@ -1222,6 +1294,23 @@ long CreateProcess(char fileName[], long priority)	// or char * pointer
 		{
 			printf("Invalid size. Fix and try again.");		//throws overflow error
 			return(PCBptr);		//returns pointer to the call, error check
+=======
+	long PCBptr;
+	long ptr;
+
+	// Allocate space for Process Control Block
+	PCBptr = AllocateOSMemory(size);  // return value contains address or error***FIX SIZE***
+	printf("PCBptr: %ld\n", PCBptr);
+	if (PCBptr == ER_STACK_OVERFLOW)	// check for error
+    {  // OS memory allocation failed
+			FreeOSMemory(UserFreeList,  size);
+			return(PCBptr);  // return error code
+    }
+		else if(PCBptr == ER_INVALID_SIZE)
+		{
+			printf("Invalid size. Fix and try again.");
+			return(PCBptr);
+>>>>>>> testBranch
 		}
 
   InitializePCB(PCBptr);		// Initialize PCB: Set nextPCBlink to end of list, default priority, Ready state, and PID
@@ -1237,12 +1326,17 @@ long CreateProcess(char fileName[], long priority)	// or char * pointer
 	}
 	else		//else logical to move the addr forward within the Progs array
 	{
+<<<<<<< HEAD
+=======
+		/* if successful, next address for absolute loader */
+>>>>>>> testBranch
 		nextAddress = Progs[progsIndex].EndAddress+1;
 		progsIndex++;
 	}
 	
 	MemArray[PCBptr + PC] = value;		//sets the range of the value 
 
+<<<<<<< HEAD
 	ptr = AllocateUserMemory(size);		// Allocate stack space from user free list
 	if (ptr == ER_STACK_OVERFLOW)	// check for error
 	{  
@@ -1263,6 +1357,35 @@ long CreateProcess(char fileName[], long priority)	// or char * pointer
 	PrintPCB(PCBptr);		//print the values within the pcb passing the start of the pcb
 
 	InsertIntoRQ(PCBptr);		// Store stack information in the PCB â€“ SP, ptr, and size
+=======
+    // Allocate stack space from user free list
+		ptr = AllocateUserMemory(size);
+	
+
+	
+	if (ptr == ER_STACK_OVERFLOW)	// check for error
+	{  // User memory allocation failed
+		FreeUserMemory(UserFreeList,  size);
+		return(ptr);  // return error code
+	}
+	else if(ptr == ER_INVALID_SIZE)
+	{
+		printf("Invalid size. Fix and try again.");
+		return(ptr);
+	}
+
+	// Store stack information in the PCB â€“ SP, ptr, and size
+	MemArray[PCBptr + SP] = ptr + size;  // empty stack is high address, full is low address
+	MemArray[PCBptr + STACK_START_ADDRESS] = ptr;
+	MemArray[PCBptr + STACK_SIZE] = size;
+	MemArray[PCBptr + PRIORITY] = priority;	// Set priority
+
+	PrintPCB(PCBptr);
+
+	//Insert PCB into Ready Queue according to the scheduling algorithm
+	InsertIntoRQ(PCBptr);
+	printf("Came out of InsertIntoRQ\n");
+>>>>>>> testBranch
 	
 	return(OK);
 }  // end of CreateProcess() function
@@ -1432,8 +1555,13 @@ long AllocateUserMemory(long size)  // return value contains address or error
 		{  
 			if(CurrentPtr == UserFreeList)  // first block
 			{
+<<<<<<< HEAD
 				MemArray[CurrentPtr + size]	= MemArray[CurrentPtr];		//move foward in main memory 
 				MemArray[CurrentPtr + size + 1] = MemArray[CurrentPtr + 1] - size;
+=======
+				MemArray[CurrentPtr + size]	= MemArray[CurrentPtr];
+				MemArray[CurrentPtr + size+1] = MemArray[CurrentPtr + 1] - size;
+>>>>>>> testBranch
 				UserFreeList = CurrentPtr + size;  // address of reduced block
 				MemArray[CurrentPtr] = UserFreeList;  // reset next pointer in the allocated block
 				return(CurrentPtr);	// return memory address
@@ -1595,6 +1723,7 @@ long InsertIntoRQ(long PCBptr) //Need to modify based on changes to local variab
 {
 	// Insert PCB according to Priority Round Robin algorithm
 	// Use priority in the PCB to find the correct place to insert.
+<<<<<<< HEAD
 	
 	// Local Variables
 	printReadyQueue(rhead);
@@ -1606,13 +1735,29 @@ long InsertIntoRQ(long PCBptr) //Need to modify based on changes to local variab
 	temp = NULL;	//define data constraint
 
 	if(PCBptr < 0 || PCBptr > 9999)		//error check the PCBptr passed
+=======
+	printReadyQueue(rhead);
+	long previousPtr = END_OF_LIST;
+	long currentPtr = RQ;
+	printf("SHOW ME RQ!!!!!!!!!!!!!!!!!!!!! %ld\n", RQ);
+	struct ReadyNode *nextNode = (struct ReadyNode*)malloc(sizeof(struct ReadyNode));
+	struct ReadyNode *temp;
+	struct ReadyNode *current = rhead;
+	temp = NULL;
+
+	if(PCBptr < 0 || PCBptr > 9999)
+>>>>>>> testBranch
 	{
 		printf("Error: Invalid PCB pointer.\n");	//throw error, return. 
 		return(ER_INVALID_ADDRESS);
 	}
 
+<<<<<<< HEAD
 	MemArray[PCBptr + STATE] = READY_STATE;		//Define MainMemory by PCBptr with nominal state
 	MemArray[PCBptr + NEXT_PCB_POINTER] = END_OF_LIST;		//define memarry location with EOL constant
+=======
+	MemArray[PCBptr + STATE] = READY_STATE;
+>>>>>>> testBranch
 
 	if(RQ == END_OF_LIST)	//check to see if RQ contains a process
 	{
@@ -1623,9 +1768,24 @@ long InsertIntoRQ(long PCBptr) //Need to modify based on changes to local variab
 		rhead = nextNode;
 		return(OK);
 	}
+<<<<<<< HEAD
 	while(current != NULL)	//loop while the current node is not null, parse to end of list. 
 	{
 		if(temp == NULL) //Insert node as new head
+=======
+	printf("the WHILe loopy\n");
+	while(current != NULL)
+	{
+		printf("RQ WHILE BAEBEE\n");
+		printf("NEW NODE: %ld\n", MemArray[PCBptr + PRIORITY]);
+		printf("NEW NODE ADDRESS: %ld\n", PCBptr);
+		printf("OLD HEAD: %ld\n", MemArray[currentPtr + PRIORITY]);
+		printf("Old NODE ADDRESS: %ld\n", currentPtr);
+		if(MemArray[PCBptr + PRIORITY] > MemArray[currentPtr + PRIORITY])
+		{
+			printf("Yeetsaur\n");
+			if(temp == NULL) //Insert node as new head
+>>>>>>> testBranch
 			{
 				MemArray[PCBptr + NEXT_PCB_POINTER] = RQ;		//redefine the head of RQ
 				RQ = PCBptr;	//update RQ
@@ -1634,19 +1794,36 @@ long InsertIntoRQ(long PCBptr) //Need to modify based on changes to local variab
 				rhead = nextNode;		//advances rhead
 				return(OK);		//return OK after operand
 			}
+<<<<<<< HEAD
 			
 			MemArray[PCBptr + NEXT_PCB_POINTER] = MemArray[previousPtr + NEXT_PCB_POINTER];		//redefine the head of RQ
 			MemArray[previousPtr + NEXT_PCB_POINTER] = PCBptr;		//Sets the main memory addr
 			temp -> next = nextNode;		//the value of next within temp
 			nextNode -> next = current;		//nextNode advance, current
 			nextNode -> readyProcess = RQ;		//nextNode data define with RQ head
+=======
+			//Otherwise put the new node between two nodes
+			printf("ARE we Here????\n");
+			MemArray[PCBptr + NEXT_PCB_POINTER] = MemArray[previousPtr + NEXT_PCB_POINTER];
+			MemArray[previousPtr + NEXT_PCB_POINTER] = PCBptr;
+			temp -> next = nextNode;
+			nextNode -> next = current;
+			nextNode -> readyProcess = RQ;
+>>>>>>> testBranch
 			return(OK);
 		}
 		else //Move up the list
 		{
+<<<<<<< HEAD
 			temp = current;		//holds the current node
 			current = current -> next;		//update current up the list
 			previousPtr = currentPtr;		//update previous pointer
+=======
+			printf("INSertRQ else\n");
+			temp = current;
+			current = current -> next;
+			previousPtr = currentPtr;
+>>>>>>> testBranch
 			currentPtr = MemArray[currentPtr + NEXT_PCB_POINTER];
 		}
 	}
@@ -1866,16 +2043,29 @@ void ISRinputCompletionInterrupt()
 	struct ReadyNode *readyCurrent;
 	long pointer;
 	long stackPtr;
+<<<<<<< HEAD
+=======
+	//long counter;
+	//long temp;
+>>>>>>> testBranch
 	char val;
 	long Value;
 	long countDown = 5;
 	long countUp = 2;
 	
 
+<<<<<<< HEAD
 	waitPrev = NULL;	//defines
 	readyPrev = NULL;		//defines
 	waitCurrent = whead;	//waitCurrent defined by head of addr
 	readyCurrent = rhead;	//readyCurrent defined by ready queue fist addr
+=======
+	waitPrev = NULL;
+	readyPrev = NULL;
+	//printf("what is whead? %ld", *whead);
+	waitCurrent = whead;
+	readyCurrent = rhead;
+>>>>>>> testBranch
 	//Prompt and read PID of the process completing input completion interrupt;
 	printf("Enter PID of Process Completing Input Completion Interrupt: ");
 	scanf("%d", &input_PID);	//parses user input
@@ -1893,7 +2083,13 @@ void ISRinputCompletionInterrupt()
 			pointer = searchAndRemovePCBFromWQ(input_PID);
 			while (countDown > 0)
 			{
+<<<<<<< HEAD
 				stackPtr = gpr[1] + countUp;
+=======
+				stackPtr = MemArray[pointer + SP] + countUp;
+				printf("IN: STACKING BItches: %ld\n", stackPtr);
+				printf("IN: Poky Point: %ld\n", pointer);
+>>>>>>> testBranch
 				foundInWait = 1;
 				printf("here\n");
 				scanf(" %c", &val);
@@ -1901,10 +2097,15 @@ void ISRinputCompletionInterrupt()
 				if(countDown == 5)
 				{
 					MemArray[pointer + GPR3] = Value;
+<<<<<<< HEAD
+=======
+					MemArray[stackPtr] = Value;
+>>>>>>> testBranch
 				}
 				else if(countDown == 4)
 				{
 					MemArray[pointer + GPR4] = Value;
+<<<<<<< HEAD
 				}
 				else if(countDown == 3)
 				{
@@ -1923,12 +2124,35 @@ void ISRinputCompletionInterrupt()
 				MemArray[stackPtr] = Value;
 				DumpMemory("After executing user program", 0, 199);
 				DumpMemory("After executing user program", 3000, 100);
+=======
+					MemArray[stackPtr] = Value;
+				}
+				else if(countDown == 3)
+				{
+					MemArray[pointer + GPR5] = Value;
+					MemArray[stackPtr] = Value;
+				}
+				else if(countDown == 2)
+				{
+					MemArray[pointer + GPR6] = Value;
+					MemArray[stackPtr] = Value;
+				}
+				else if(countDown == 1)
+				{
+					MemArray[pointer + GPR7] = Value;
+					MemArray[stackPtr] = Value;
+				}
+				printf("THis ya pointz sun %ld\n", pointer);
+				printf("THIS ya Pointer sun: %ld\n", pointer);
+				printf("THAT VALUE IS: %ld\n", (pointer + GPR1 + 2));
+>>>>>>> testBranch
 				countDown--;
 				countUp++;
 			}
 			if(countDown == 0)
 			{
 				MemArray[pointer + STATE] = READY_STATE;
+				printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Pointer before insertion: %ld\n", pointer);
 				InsertIntoRQ(pointer);
 				break;
 			}
@@ -1960,7 +2184,6 @@ void ISRinputCompletionInterrupt()
 		printf("PID not found.\n");
 	}
 	return;
-
 }  // end of ISRinputCompletionInterrupt() function
 
 // ************************************************************
@@ -2021,11 +2244,18 @@ void ISRoutputCompletionInterrupt()
 			pointer = searchAndRemovePCBFromWQ(input_PID);
 			while (countDown > 0)
 			{
+<<<<<<< HEAD
 				stackPtr = gpr[1] + countUp;
+=======
+				stackPtr = MemArray[pointer + SP] + countUp;
+				printf("STACKING BItches: %ld\n", stackPtr);
+				printf("Poky Point: %ld\n", pointer);
+>>>>>>> testBranch
 				foundInWait = 1;
 				printf("here\n");
 				if(countDown == 5)
 				{
+<<<<<<< HEAD
 					printf("GPR3: %ld\n", MemArray[pointer + GPR3]);
 				}
 				else if(countDown == 4)
@@ -2048,6 +2278,29 @@ void ISRoutputCompletionInterrupt()
 				MemArray[stackPtr] = Value;
 				DumpMemory("After executing user program", 0, 199);
 				DumpMemory("After executing user program", 3000, 100);
+=======
+					printf("!!!!!!!!!!!!!!!!!!!GPR3: %c\n", (char)MemArray[pointer + GPR3]);
+				}
+				else if(countDown == 4)
+				{
+					printf("!!!!!!!!!!!!!!!!!!!GPR4: %c\n", (char)MemArray[pointer + GPR4]);
+				}
+				else if(countDown == 3)
+				{
+					printf("!!!!!!!!!!!!!!!!!!!GPR5: %c\n", (char)MemArray[pointer + GPR5]);
+				}
+				else if(countDown == 2)
+				{
+					printf("!!!!!!!!!!!!!!!!!!!GPR6: %c\n", (char)MemArray[pointer + GPR6]);
+				}
+				else if(countDown == 1)
+				{
+					printf("!!!!!!!!!!!!!!!!!!!GPR7: %c\n", (char)MemArray[pointer + GPR7]);
+				}
+				printf("THis ya pointz sun %ld\n", pointer);
+				printf("THIS ya Pointer sun: %ld\n", pointer);
+				printf("THAT VALUE IS: %ld\n", (pointer + GPR1 + 2));
+>>>>>>> testBranch
 				countDown--;
 				countUp++;
 			}
@@ -2160,7 +2413,7 @@ long memFreeSystemCall()
 		size = 2;
 	}
 
-	gpr[0] = FreeUserMemory(gpr[1], size); //****Needs to pass gpr[1] as argument too****
+	gpr[0] = FreeUserMemory(sp, size); //****Needs to pass gpr[1] as argument too****
 
 	printf("memFreeSystemCall has been called, displaying GPR 0 - 2: %ld, %ld, %ld,", gpr[0], gpr[1], gpr[2]);
 	return gpr[0];
@@ -2253,6 +2506,10 @@ void saveContext(long PCBPtr)
 	MemArray[PCBPtr + GPR6] = gpr[6];
 	MemArray[PCBPtr + GPR7] = gpr[7];
 
+<<<<<<< HEAD
+=======
+	printf("BITCH HERE2: %ld\n", pc);
+>>>>>>> testBranch
 	MemArray[PCBPtr + SP] = sp;
 	MemArray[PCBPtr + PC] = pc;
 
@@ -2288,6 +2545,7 @@ long SelectProcessFromRQ()
 	printf("Enter RQ Selcetet\n");
 	long PCBptr = RQ;
 	struct ReadyNode *currenthead = rhead;
+	long size = 22;
 	printf("RQ:%ld\n", RQ);
 	if(RQ != END_OF_LIST)
 	{
@@ -2302,7 +2560,11 @@ long SelectProcessFromRQ()
 	}
 	printf("New Point NULL\n");
 	// Set next point to EOL in the PCB
+<<<<<<< HEAD
 	MemArray[PCBptr + NEXT_PCB_POINTER] = END_OF_LIST;
+=======
+	MemArray[PCBptr] = PCBptr + size;
+>>>>>>> testBranch
 	if(rhead == NULL)
 	{
 		RQ = END_OF_LIST;
@@ -2359,6 +2621,12 @@ int fetchProgInfo(long RunningPCBptr)
 			i++;																						//Increment index variable
 		}
 	}
+<<<<<<< HEAD
 	printf("Logic error reached. Should return OK or Invalid PID codes.");	//Prints error message
 	return ER_LOGIC;																		//Returns logic error code
 }	
+=======
+	return -1;
+}	
+	
+>>>>>>> testBranch
