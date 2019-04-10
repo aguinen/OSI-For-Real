@@ -1,13 +1,12 @@
 // ************************************************************
-
-// Jacob Terren
-// 300961195
+// Jacob Terren, Angus Guinen, Brian Tejada, Cam Turner
+// 300961195, 300924323, 30095770,
 // CSCI.465: Operating Systems Internals
-// Homework #1
-// 2/9/18
+// Homework #2
+// 4/9/2019
 
 // Program Description:
-// The purpose of this program is to create a HYPO machine simulator.
+// The purpose of this program is to create a MTOPS machine simulator.
 // It will be able to execute machine language programs, utilizing
 // the memory made available to the MTOPS Sim., "hardware" registers,
 // and various functions (ADD, SUB, DIV, MULT, FETCH, etc.)
