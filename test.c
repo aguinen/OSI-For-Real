@@ -1,16 +1,19 @@
 // ************************************************************
+
 // Jacob Terren
 // 300961195
 // CSCI.465: Operating Systems Internals
 // Homework #1
 // 2/9/18
+
 // Program Description:
 // The purpose of this program is to create a HYPO machine simulator.
 // It will be able to execute machine language programs, utilizing
-// the memory made available to the HYPO Sim., "hardware" registers,
+// the memory made available to the MTOPS Sim., "hardware" registers,
 // and various functions (ADD, SUB, DIV, MULT, FETCH, etc.)
 // ************************************************************
 
+//library declaration statements
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -64,9 +67,10 @@
 	#define ER_STACK_OVERFLOW -15			//Overflow of stack
 	#define ER_ABS_LOAD_FAIL -16			//Absolute Loader failed
 	#define ER_EXE_FAILED -17					//Absolute Loader failed
-	#define ER_INVALID_SIZE -18
-	#define ER_INVALID_PID	-19
-	#define ER_INVALID_ID 	-20
+	#define ER_INVALID_SIZE -18				//defines invalid size of memaddr
+	#define ER_INVALID_PID	-19				//defines invalid pid out of range
+	#define ER_INVALID_ID 	-20				//defines invalid process id out of range
+	#define ER_LOGIC				-21				//Something happened that shouldn't happen
 
 
 //Structures
@@ -116,20 +120,20 @@
 	long pc;							//Program Counter
 	long sp;							//Stack Pointer
 	struct ProgramInfo Progs[10];	//ProgramInfo object
-	struct ProgramInfo CurrProg;
-	long progsIndex = 0;
+	struct ProgramInfo CurrProg;	//holds the current process ID for use
+	long progsIndex = 0;					//Holds index of the Progs[] array
 	struct InstructionInfo Op;			//InstructionInfo object
 	long RQ = END_OF_LIST;				//Initialize Ready Queue to EndOfList (-1)
 	long WQ = END_OF_LIST;				//Initialize Waiting Queue to EndOfList (-1)
 	long OSFreeList = END_OF_LIST;		//Initialize OSFreeList to EndOfList (-1)
 	long UserFreeList = END_OF_LIST;	//Initialize UserFreeList to EndOfList (-1)
-	long ProcessID = 1;
-	long nextAddress = 0;
+	long ProcessID = 1;		//sets the base process ID
+	long nextAddress = 0; //contains the next mem addr for use in various methods
 	long SystemShutdownStatus = 1; //initialize System Shutdown status to 1
-	struct WaitingNode *whead = NULL;
-	struct ReadyNode *rhead = NULL;
+	struct WaitingNode *whead = NULL;	//creates a waiting node head
+	struct ReadyNode *rhead = NULL;	//creates a readynode for the RQ
 
-	long priority = DEF_PRIORITY;
+	long priority = DEF_PRIORITY;	//defines the default priority
 
 
 //Function Prototypes
@@ -272,7 +276,7 @@ int main()	//Start of main function
 		}
 		else
 		{
-			printf("Shit failed to find PID m8");
+			printf("Failed to find PID");
 		}
 
 		DumpMemory("After executing user program", 0, 199);	//Dumps Main Memory from adress 0 to address 99 after executing test program
@@ -792,7 +796,7 @@ long CPU()
 					Op.Op1Value = Op.OpValue;	//Saves value from FetchOperand to Op.Op1Value
 					Op.Op1Address = Op.OpAddress;	//Saves address from FetchOperand to Op.Op1Address
 				}
-
+				printf("Counter: %ld\n", Op.Op1Value);
 				if(Op.Op1Value > 0) //If operand value is greater than zero...
 				{
 					if((CurrProg.StartAddress <= (MemArray[pc] + CurrProg.StartAddress) && (MemArray[pc] + CurrProg.StartAddress) <  CurrProg.EndAddress)) //...and new PC is in valid range
@@ -1082,14 +1086,14 @@ long size)
 
 	if(StartAddress < 0 || size > 10000 || (StartAddress + size) > 10000)	//If range is not valid throw error
 	{
-		printf("Invalid range parameters for DumpMemory() function, try again.");
-		return(ER_INVALID_RANGE);	//returns invalid range error
+		printf("Invalid range parameters for DumpMemory() function, try again.");	//prints error statements
+		return(ER_INVALID_RANGE);																						//returns invalid range error
 	}
 
 	printf("GPR:\tG0\tG1\tG2\tG3\tG4\tG5\tG6\tG7\tSP\tPC\n\t"); //Displays GPRs, SP, & PC header
 
-	for(int i = 0; i < 8; i++)	//Displays GPRs
-		printf("%ld\t", gpr[i]);
+	for(int i = 0; i < 8; i++)	//Declares for loop to print out all registers
+		printf("%ld\t", gpr[i]);	//print statement
 
 	printf("%ld\t%ld\n", sp, pc);	//Displays SP, & PC
 
@@ -1099,6 +1103,7 @@ long size)
 	{															//Increments by 10 to display as address side-header
 		printf("\n%d\t", x);	//Displays address header as multiples of 10
 		for(int y = 0; y < 10; y++)		//Displays contents of main memory
+			
 			printf("%ld\t", MemArray[x+y]);
 	}
 	printf("\nClock:\t%ld", Clock);	//Displays value of Clock
@@ -1128,69 +1133,69 @@ long size)
 // ************************************************************
 long SystemCall(long SystemCallID)
 {
-	psr = OS_MODE;	// Set system mode to OS mode
 	//local variables
-	long status = OK;
-
-	switch(SystemCallID)
+	
+	long status = OK; //sets a status based on global norm
+	psr = OS_MODE;	// Set system mode to OS mode
+	switch(SystemCallID)		//declares switch statement for seperate cases
 	{
-		case 1:
+		case 1:		//throws an invalid sys call 
 			printf("Create Process System Call Not Implememented\n");
 		break;
 
-		case 2:
+		case 2:		//throws a sys integration error
 			printf("Delete Process System Call Not Implememented\n");
 		break;
 
-		case 3:
+		case 3:		//throws a sys integration error
 			printf("Process Inquiry System Call Not Implememented\n");
 		break;
 
-		case 4:
-			status = memAllocSystemCall();
+		case 4:		//calls system memory call
+			status = memAllocSystemCall();	//direct method call, updates status based on return
 		break;
 
-		case 5:
-			status = memFreeSystemCall();
+		case 5:		//calls system memory call
+			status = memFreeSystemCall();		//direct method call, updates status based on return 
 		break;
 
-		case 6:
+		case 6:		//throws a system integration error
 			printf("System Call Not Implememented\n");
 		break;
 
-		case 7:
+		case 7:		//throws a system integration error
 			printf("System Call Not Implememented\n");
 		break;
 
-		case 8:
+		case 8:		//direct method call to systemCall()
 			status = io_getcSystemCall();
 		break;
 
-		case 9:
+		case 9:		//direct method call to systemCall()
 			status = io_putcSystemCall();
 		break;
 
-		case 10:
+		case 10:	//System integration error throw
 			printf("System Call Not Implememented\n");
 		break;
 
-		case 11:
+		case 11:		//System integration error throw
 			printf("System Call Not Implememented\n");
 		break;
 
-		case 12:
+		case 12:	//system integration error throw
 			printf("System Call Not Implememented\n");
 		break;
 
-		default:		// Invalid system call ID
+		default:		//Default case to maintain style and the invalid CallId error throw
 			printf("ERROR: Invalid SystemCallID.\n");
-			status = ER_INVALID_ID;
+			status = ER_INVALID_ID;		//return the error code to the call
 			break;
 	}  // end of SystemCallID switch statement
 
 	psr = USER_MODE;	// Set system mode to user mode
 
-	return (status);
+	return (status);	//return the error 
 }  // end of SystemCall() function
 
 // ************************************************************
@@ -1213,72 +1218,64 @@ long CreateProcess(char fileName[], long priority)	// or char * pointer
 	//Local Variables
 	long value = 0;
 	long size = 22;		//Default size of PCB
-	long PCBptr;
-	long ptr;
+	long PCBptr;			//Declares a variable that contains the first memory addr of the PCB
+	long ptr;					//Declares pointer that contains the first mem addr of main memory
 
 	// Allocate space for Process Control Block
-	PCBptr = AllocateOSMemory(size);  // return value contains address or error***FIX SIZE***
-	printf("PCBptr: %ld\n", PCBptr);
-	if (PCBptr == ER_STACK_OVERFLOW)	// check for error
-    {  // OS memory allocation failed
-			FreeOSMemory(UserFreeList,  size);
+	PCBptr = AllocateOSMemory(size);  // return value contains address or error
+	
+	if (PCBptr == ER_STACK_OVERFLOW)	//Check the current location of the PCB head vs known memory constraint
+    {  
+			FreeOSMemory(UserFreeList,  size);		//calls FreeOSMemory with the size and location of the free
 			return(PCBptr);  // return error code
     }
-		else if(PCBptr == ER_INVALID_SIZE)
+	else if(PCBptr == ER_INVALID_SIZE)	//else statement throws overflow error
 		{
-			printf("Invalid size. Fix and try again.");
-			return(PCBptr);
+			printf("Invalid size. Fix and try again.");		//throws overflow error
+			return(PCBptr);		//returns pointer to the call, error check
 		}
 
-    // Initialize PCB: Set nextPCBlink to end of list, default priority, Ready state, and PID
-	InitializePCB(PCBptr);
+  InitializePCB(PCBptr);		// Initialize PCB: Set nextPCBlink to end of list, default priority, Ready state, and PID
 	printf("Came out of Initialize");
-    // Load the program
+  		
+			// Load the program
+	
 	value = AbsoluteLoader(fileName);	//Calls AbsoluteLoader() function with fileName
-	printf("Came out of Absolute Loader");
 	if (value < 0)	//Checks for error code from Absolute Loader
 	{
 		printf("Absolute loader failed, error code: %ld\n", value);	//Prints the error code that AbsoluteLoader returns with
 		return(ER_ABS_LOAD_FAIL);	//Returns from main with error code
 	}
-	else
+	else		//else logical to move the addr forward within the Progs array
 	{
 		/* if successful, next address for absolute loader */
 		nextAddress = Progs[progsIndex].EndAddress+1;
 		progsIndex++;
 	}
 	
-	MemArray[PCBptr + PC] = value;
+	MemArray[PCBptr + PC] = value;		//sets the range of the value 
 
-    // Allocate stack space from user free list
-		ptr = AllocateUserMemory(size);
-	
-
-	
+	ptr = AllocateUserMemory(size);		// Allocate stack space from user free list
 	if (ptr == ER_STACK_OVERFLOW)	// check for error
-	{  // User memory allocation failed
-		FreeUserMemory(UserFreeList,  size);
+	{  
+		FreeUserMemory(UserFreeList,  size);		// User memory allocation failed
 		return(ptr);  // return error code
 	}
-	else if(ptr == ER_INVALID_SIZE)
+	else if(ptr == ER_INVALID_SIZE)		//checks ptr against known valid range
 	{
-		printf("Invalid size. Fix and try again.");
+		printf("Invalid size. Fix and try again.");		//throws error and sends print statement
 		return(ptr);
 	}
-
-	// Store stack information in the PCB â€“ SP, ptr, and size
+	// Store stack information in the PCB SP, ptr, and size
 	MemArray[PCBptr + SP] = ptr + size;  // empty stack is high address, full is low address
-	MemArray[PCBptr + STACK_START_ADDRESS] = ptr;
-	MemArray[PCBptr + STACK_SIZE] = size;
+	MemArray[PCBptr + STACK_START_ADDRESS] = ptr;		//sets ptr  to the start of the mem addr from stack
+	MemArray[PCBptr + STACK_SIZE] = size;		//updates size from the size of the stack and pcb memaddr 
 	MemArray[PCBptr + PRIORITY] = priority;	// Set priority
 
-	PrintPCB(PCBptr);
+	PrintPCB(PCBptr);		//print the values within the pcb passing the start of the pcb
 
-	//Insert PCB into Ready Queue according to the scheduling algorithm
-	InsertIntoRQ(PCBptr);
-	printf("Came out of InsertIntoRQ\n");
+	InsertIntoRQ(PCBptr);		// Store stack information in the PCB â€“ SP, ptr, and size
 	
-
 	return(OK);
 }  // end of CreateProcess() function
 
@@ -1377,17 +1374,17 @@ long AllocateOSMemory(long size)  // return value contains address or error
 // ************************************************************
 void InitializePCB(long PCBptr)
 {
-	for(int i = PCBptr; i < PCBptr+22 ; i++)
+	for(int i = PCBptr; i < PCBptr+22 ; i++)		//declares a loop to move through PCB size
 	{
-		MemArray[i] = 0;
+		MemArray[i] = 0;		//zeros the elements of the PCB
 	}
 
-	Progs[progsIndex].pid = ProcessID;
+	Progs[progsIndex].pid = ProcessID;		//Defines ProcessID within the scope
 	MemArray[PCBptr + PID] = ProcessID++;  // ProcessID is global variable initialized to 1
 	MemArray[PCBptr + PRIORITY]	= DEF_PRIORITY;  // DefaultPriority is a constant set to 128
 	MemArray[PCBptr + STATE] = READY_STATE;    // ReadyState is a constant set to 1
-	MemArray[PCBptr + NEXT_PCB_POINTER] = OSFreeList;
-	MemArray[PCBptr + PSR] = psr;
+	MemArray[PCBptr + NEXT_PCB_POINTER] = OSFreeList;	//Sets the beginning of the mem.addr for OSFreeList call
+	MemArray[PCBptr + PSR] = psr;		//defines psr from the start of the PCBptr
 }
 
 // ************************************************************
@@ -1409,8 +1406,8 @@ long AllocateUserMemory(long size)  // return value contains address or error
 	long CurrentPtr;
 	long PreviousPtr;
 
-	// Allocate memory from OS free space, which is organized as link
-	if(UserFreeList == END_OF_LIST)
+
+	if(UserFreeList == END_OF_LIST)			// Allocate memory from OS free space, which is organized as link
     {
 			printf("Error, no free OS memory.\n");
 			return(ER_STACK_OVERFLOW);   // ErrorNoFreeMemory is constant set to < 0
@@ -1421,16 +1418,16 @@ long AllocateUserMemory(long size)  // return value contains address or error
 			return(ER_INVALID_SIZE);  // ErrorInvalidMemorySize is constant < 0 **FIX EROOR CODE**
     }
 	if(size == 1)
-		size = 2;  // Minimum allocated memory is 2 locations
+		size = 2;  // Minimum allocated memory is 2 locations, always define the minimum of 2. 
 
-	CurrentPtr = UserFreeList;
-  PreviousPtr = END_OF_LIST;
+	CurrentPtr = UserFreeList;	//Defines CurrentPtr from first mem.addr of UserFreeList
+  PreviousPtr = END_OF_LIST;	//Defines PreviousPtr from EOL of list
   while (CurrentPtr != END_OF_LIST)
   {
-		// Check each block in the link list until block with requested memory size is found
-		if(MemArray[CurrentPtr + 1] == size)
-		{  // Found block with requested size.  Adjust pointers
-			if(CurrentPtr == UserFreeList)  // first block
+		
+		if(MemArray[CurrentPtr + 1] == size)		// Check each block in the link list until block with requested memory size is found
+		{  
+			if(CurrentPtr == UserFreeList)  // Found block with requested size.  Adjust pointers
 			{
 				UserFreeList = MemArray[CurrentPtr];  // first entry is pointer to next block
 				MemArray[CurrentPtr] = END_OF_LIST;  // reset next pointer in the allocated block
@@ -1443,19 +1440,19 @@ long AllocateUserMemory(long size)  // return value contains address or error
 				return(CurrentPtr);    // return memory address
 			}
 		}
-		else if(MemArray[CurrentPtr + 1] > size)
-		{  // Found block with size greater than requested size
+		else if(MemArray[CurrentPtr + 1] > size)		// Found block with size greater than requested size
+		{  
 			if(CurrentPtr == UserFreeList)  // first block
 			{
-				MemArray[CurrentPtr + size]	= MemArray[CurrentPtr];
-				MemArray[CurrentPtr + size+1] = MemArray[CurrentPtr + 1] - size;
+				MemArray[CurrentPtr + size]	= MemArray[CurrentPtr];		//move foward in main memory 
+				MemArray[CurrentPtr + size + 1] = MemArray[CurrentPtr + 1] - size;
 				UserFreeList = CurrentPtr + size;  // address of reduced block
 				MemArray[CurrentPtr] = UserFreeList;  // reset next pointer in the allocated block
 				return(CurrentPtr);	// return memory address
 			}
 			else  //Not the first block
 			{
-				MemArray[CurrentPtr + size]	= MemArray[CurrentPtr];
+				MemArray[CurrentPtr + size]	= MemArray[CurrentPtr];	//move forward in main memory
 				MemArray[CurrentPtr + size + 1] = MemArray[CurrentPtr + 1] - size;
 				MemArray[PreviousPtr] = CurrentPtr + size;  // address of reduced block
 				MemArray[CurrentPtr] = END_OF_LIST;  // reset next pointer in the allocated block
@@ -1488,7 +1485,7 @@ long FreeOSMemory(long ptr, long size)  // return value contains OK or error cod
 {
 	if(ptr < 7000 || ptr > 9999)  	// Address range is given in the class
 	{
-		printf("Error, Invalid address");
+		printf("Error, Invalid address");		//Throw error
 		return(ER_INVALID_ADDRESS);  // ErrorInvalidMemoryAddress is constantset to  < 0
 	}
 
@@ -1496,22 +1493,22 @@ long FreeOSMemory(long ptr, long size)  // return value contains OK or error cod
 	{
 		size = 2;  // minimum allocated size
 	}
-	else if(size < 1 || (ptr+size) >= 9999)
-	{	// Invalid size
+	else if(size < 1 || (ptr+size) >= 9999) // Invalid size check
+	{	
 		printf("Error, invalid size.");
-		return(ER_INVALID_SIZE);  	// All error codes are < 0
+		return(ER_INVALID_SIZE);  	// Throw error
 	}
 
-	for(int i = ptr; i < ptr+size; i++)
+	for(int i = ptr; i < ptr+size; i++)		//Zero Memory array
 	{
 		MemArray[i] = 0;
 	}
 
-	MemArray[ptr] = -1;
-	MemArray[ptr+1] = size;
-	OSFreeList = ptr;
+	MemArray[ptr] = -1;	//define pointer to end
+	MemArray[ptr+1] = size;	//define size by size 
+	OSFreeList = ptr;	//define OSFreeList with ptr
 
-	return (OK);
+	return (OK);	//return 0 to call
 }  // end of FreeOSMemory() function
 
 // ************************************************************
@@ -1539,20 +1536,20 @@ long FreeUserMemory(long ptr, long size)  // return value contains OK or error c
 	{
 		size = 2;  // minimum allocated size
 	}
-	else if(size < 1 || (ptr+size) >= 9999)
-	{	// Invalid size
+	else if(size < 1 || (ptr+size) >= 9999)			// Invalid size check
+	{
 		printf("Error, invalid size.");
 		return(ER_INVALID_SIZE);  	// All error codes are < 0
 	}
 
-	for(int i = ptr; i < ptr+size; i++)
+	for(int i = ptr; i < ptr+size; i++)		//Zero memory array
 	{
 		MemArray[i] = 0;
 	}
 
-	MemArray[ptr] = -1;
-	MemArray[ptr+1] = size;
-	UserFreeList = ptr;
+	MemArray[ptr] = -1;		//Define and zero pointer
+	MemArray[ptr+1] = size;	//define size
+	UserFreeList = ptr;		//set UserFreeList from the mem.addr pointer ptr
 
 	return (OK);
 }  // end of FreeUserMemory() function
@@ -1586,9 +1583,9 @@ void PrintPCB(long PCBptr)
 	printf("Size = %ld\n", MemArray[PCBptr + STACK_SIZE]);
 	printf("GPRs : \n");
 
-	for(int i = 0; i < 8; i++)
+	for(int i = 0; i < 8; i++)		//prints the GPR table
 	{
-		printf("GPR[%d]: %ld\n", i, MemArray[PCBptr + i + GPR0]);
+		printf("GPR[%d]: %ld\n", i, MemArray[PCBptr + i + GPR0]);		//print statement
 	}
 }  // end of PrintPCB() function
 
@@ -1610,68 +1607,61 @@ long InsertIntoRQ(long PCBptr) //Need to modify based on changes to local variab
 {
 	// Insert PCB according to Priority Round Robin algorithm
 	// Use priority in the PCB to find the correct place to insert.
+	
+	// Local Variables
 	printReadyQueue(rhead);
-	long previousPtr = END_OF_LIST;
-	long currentPtr = RQ;
-	printf("SHOW ME RQ!!!!!!!!!!!!!!!!!!!!! %ld\n", RQ);
-	struct ReadyNode *nextNode = (struct ReadyNode*)malloc(sizeof(struct ReadyNode));
-	struct ReadyNode *temp;
-	struct ReadyNode *current = rhead;
-	temp = NULL;
+	long previousPtr = END_OF_LIST;	//define prevPtr with EOL
+	long currentPtr = RQ;	//set current with the RQ head
+	struct ReadyNode *nextNode = (struct ReadyNode*)malloc(sizeof(struct ReadyNode));	//define a new node ReadyNode of ReadyNode
+	struct ReadyNode *temp;	//add data
+	struct ReadyNode *current = rhead;	//define location
+	temp = NULL;	//define data constraint
 
-	if(PCBptr < 0 || PCBptr > 9999)
+	if(PCBptr < 0 || PCBptr > 9999)		//error check the PCBptr passed
 	{
-		printf("Error: Invalid PCB pointer.\n");
+		printf("Error: Invalid PCB pointer.\n");	//throw error, return. 
 		return(ER_INVALID_ADDRESS);
 	}
 
-	MemArray[PCBptr + STATE] = READY_STATE;
+	MemArray[PCBptr + STATE] = READY_STATE;		//Define MainMemory by PCBptr with nominal state
+	//MemArray[PCBptr + NEXT_PCB_POINTER] = END_OF_LIST;		//define memarry location with EOL constant
 
-	if(RQ == END_OF_LIST)
+	if(RQ == END_OF_LIST)	//check to see if RQ contains a process
 	{
-		printf("This list is empty\n");
+		printf("This list is empty\n");	//fill with NULL process, Advance nodes, output. 
 		RQ = PCBptr;
 		nextNode -> readyProcess = RQ;
 		nextNode -> next = rhead;
 		rhead = nextNode;
 		return(OK);
 	}
-	printf("the WHILe loopy\n");
-	while(current != NULL)
+	while(current != NULL)	//loop while the current node is not null, parse to end of list. 
 	{
-		printf("RQ WHILE BAEBEE\n");
-		printf("NEW NODE: %ld\n", MemArray[PCBptr + PRIORITY]);
-		printf("NEW NODE ADDRESS: %ld\n", PCBptr);
-		printf("OLD HEAD: %ld\n", MemArray[currentPtr + PRIORITY]);
-		printf("Old NODE ADDRESS: %ld\n", currentPtr);
 		if(MemArray[PCBptr + PRIORITY] > MemArray[currentPtr + PRIORITY])
 		{
-			printf("Yeetsaur\n");
 			if(temp == NULL) //Insert node as new head
 			{
-				printf("Putting node as new head\n");
-				MemArray[PCBptr + NEXT_PCB_POINTER] = RQ;
-				RQ = PCBptr;
-				nextNode -> readyProcess = RQ;
-				nextNode -> next = rhead;
-				rhead = nextNode;
-				return(OK);
+				MemArray[PCBptr + NEXT_PCB_POINTER] = RQ;		//redefine the head of RQ
+				RQ = PCBptr;	//update RQ
+				nextNode -> readyProcess = RQ;	//Defines the data within nextNode to readyProcess
+				nextNode -> next = rhead;		//defines the location of nextNode with rhead
+				rhead = nextNode;		//advances rhead
+				return(OK);		//return OK after operand
 			}
-			//Otherwise put the new node between two nodes
-			printf("ARE we Here????\n");
-			MemArray[PCBptr + NEXT_PCB_POINTER] = MemArray[previousPtr + NEXT_PCB_POINTER];
-			MemArray[previousPtr + NEXT_PCB_POINTER] = PCBptr;
-			temp -> next = nextNode;
-			nextNode -> next = current;
-			nextNode -> readyProcess = RQ;
+		
+			
+			MemArray[PCBptr + NEXT_PCB_POINTER] = MemArray[previousPtr + NEXT_PCB_POINTER];		//redefine the head of RQ
+			MemArray[previousPtr + NEXT_PCB_POINTER] = PCBptr;		//Sets the main memory addr
+			temp -> next = nextNode;		//the value of next within temp
+			nextNode -> next = current;		//nextNode advance, current
+			nextNode -> readyProcess = RQ;		//nextNode data define with RQ head
 			return(OK);
 		}
 		else //Move up the list
 		{
-			printf("INSertRQ else\n");
-			temp = current;
-			current = current -> next;
-			previousPtr = currentPtr;
+			temp = current;		//holds the current node
+			current = current -> next;		//update current up the list
+			previousPtr = currentPtr;		//update previous pointer
 			currentPtr = MemArray[currentPtr + NEXT_PCB_POINTER];
 		}
 	}
@@ -1679,7 +1669,6 @@ long InsertIntoRQ(long PCBptr) //Need to modify based on changes to local variab
 }
 
 //************************************************************
-//Author: Brian Tejada
 //
 // Function: InsertIntoWQ
 //
@@ -1783,7 +1772,6 @@ void CheckAndProcessInterrupt()
 }//end of CheckAndProcessInterrupt() function
 
 // ************************************************************
-// Author: Brian Tejada
 //
 // Function: ISRrunProgramInterrupt
 //
@@ -1819,7 +1807,6 @@ void ISRrunProgramInterrupt()
 // ************************************************************
 // Function: ISRshutdownSystem
 //
-// Modified by Cam Turner
 // Task Description:
 //	terminate all processes in RQ and WQ from the program
 //
@@ -1838,17 +1825,17 @@ void ISRshutdownSystem()
 	struct WaitingNode *wpointer;
 	rpointer = rhead;
 	wpointer = whead;
-	//set ptr to first PCB pointed by RQ;
-	ptr = RQ;
-	//terminate all processes in RQ one by one
-	while(ptr != END_OF_LIST)
+	
+	ptr = RQ;		//set ptr to first PCB pointed by RQ;
+	
+	while(ptr != END_OF_LIST)		//terminate all processes in RQ one by one
 	{
-		rpointer = rpointer -> next;
-		if(rpointer == NULL)
+		rpointer = rpointer -> next;		//move rpointer through list
+		if(rpointer == NULL)		//checks EOL
 		{
 			break;
 		}
-		RQ = rpointer -> readyProcess;
+		RQ = rpointer -> readyProcess;	//updates data
 		terminateProcess(ptr); //terminates next process in ready queue
 		ptr = RQ;
 	}
@@ -1871,7 +1858,6 @@ void ISRshutdownSystem()
 // ************************************************************
 // Function: ISRinputCompletionInterrupt
 //
-// Author: Cam Turner
 // Task Description:
 //	read PID of the process completing the io_getc operation
 //	read one character from keyboard (input device)
@@ -1895,39 +1881,34 @@ void ISRinputCompletionInterrupt()
 	struct ReadyNode *readyCurrent;
 	long pointer;
 	long stackPtr;
-	//long counter;
-	//long temp;
 	char val;
 	long Value;
 	long countDown = 5;
 	long countUp = 2;
 	
 
-	waitPrev = NULL;
-	readyPrev = NULL;
-	//printf("what is whead? %ld", *whead);
-	waitCurrent = whead;
-	readyCurrent = rhead;
+	waitPrev = NULL;	//defines
+	readyPrev = NULL;		//defines
+	waitCurrent = whead;	//waitCurrent defined by head of addr
+	readyCurrent = rhead;	//readyCurrent defined by ready queue fist addr
 	//Prompt and read PID of the process completing input completion interrupt;
 	printf("Enter PID of Process Completing Input Completion Interrupt: ");
-	scanf("%d", &input_PID);
-	//checks if PID is valid
-	if(input_PID < 0)
+	scanf("%d", &input_PID);	//parses user input
+	
+	if(input_PID < 0)		//terminate all processes in RQ one by one
 	{
 		printf("Error reading user input, please close and try again.\n");
 		return;
 	}
 	
-	while(waitCurrent != NULL)
+	while(waitCurrent != NULL)		//loops while not at end of WQ
 	{
-		if(MemArray[(waitCurrent -> waitProcess) + PID] == input_PID)
+		if(MemArray[(waitCurrent -> waitProcess) + PID] == input_PID)		//checks PID against input PID from node
 		{
 			pointer = searchAndRemovePCBFromWQ(input_PID);
 			while (countDown > 0)
 			{
-				stackPtr = MemArray[pointer + SP] + countUp;
-				printf("IN: STACKING BItches: %ld\n", stackPtr);
-				printf("IN: Poky Point: %ld\n", pointer);
+				stackPtr = gpr[1] + countUp;
 				foundInWait = 1;
 				printf("here\n");
 				scanf(" %c", &val);
@@ -1957,16 +1938,12 @@ void ISRinputCompletionInterrupt()
 					MemArray[pointer + GPR7] = Value;
 					MemArray[stackPtr] = Value;
 				}
-				printf("THis ya pointz sun %ld\n", pointer);
-				printf("THIS ya Pointer sun: %ld\n", pointer);
-				printf("THAT VALUE IS: %ld\n", (pointer + GPR1 + 2));
 				countDown--;
 				countUp++;
 			}
 			if(countDown == 0)
 			{
 				MemArray[pointer + STATE] = READY_STATE;
-				printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Pointer before insertion: %ld\n", pointer);
 				InsertIntoRQ(pointer);
 				break;
 			}
@@ -2058,34 +2035,29 @@ void ISRoutputCompletionInterrupt()
 			pointer = searchAndRemovePCBFromWQ(input_PID);
 			while (countDown > 0)
 			{
-				stackPtr = MemArray[pointer + SP] + countUp;
-				printf("STACKING BItches: %ld\n", stackPtr);
-				printf("Poky Point: %ld\n", pointer);
+				stackPtr = gpr[1] + countUp;
 				foundInWait = 1;
 				printf("here\n");
 				if(countDown == 5)
 				{
-					printf("!!!!!!!!!!!!!!!!!!!GPR3: %c\n", (char)MemArray[pointer + GPR3]);
+					printf("GPR3: %c\n", (char)MemArray[pointer + GPR3]);
 				}
 				else if(countDown == 4)
 				{
-					printf("!!!!!!!!!!!!!!!!!!!GPR4: %c\n", (char)MemArray[pointer + GPR4]);
+					printf("GPR4: %c\n", (char)MemArray[pointer + GPR4]);
 				}
 				else if(countDown == 3)
 				{
-					printf("!!!!!!!!!!!!!!!!!!!GPR5: %c\n", (char)MemArray[pointer + GPR5]);
+					printf("GPR5: %c\n", (char)MemArray[pointer + GPR5]);
 				}
 				else if(countDown == 2)
 				{
-					printf("!!!!!!!!!!!!!!!!!!!GPR6: %c\n", (char)MemArray[pointer + GPR6]);
+					printf("GPR6: %c\n", (char)MemArray[pointer + GPR6]);
 				}
 				else if(countDown == 1)
 				{
-					printf("!!!!!!!!!!!!!!!!!!!GPR7: %c\n", (char)MemArray[pointer + GPR7]);
+					printf("GPR7: %c\n", (char)MemArray[pointer + GPR7]);
 				}
-				printf("THis ya pointz sun %ld\n", pointer);
-				printf("THIS ya Pointer sun: %ld\n", pointer);
-				printf("THAT VALUE IS: %ld\n", (pointer + GPR1 + 2));
 				countDown--;
 				countUp++;
 			}
@@ -2274,7 +2246,6 @@ void Dispatcher(long PCBPtr)
 	gpr[7] = MemArray[PCBPtr + GPR7];
 
 	sp = MemArray[PCBPtr + SP];
-	printf("BITCH HERE: %ld\n", MemArray[PCBPtr + PC]);
 	pc = MemArray[PCBPtr + PC];
 
 	psr = USER_MODE;
@@ -2291,11 +2262,8 @@ void saveContext(long PCBPtr)
 	MemArray[PCBPtr + GPR5] = gpr[5];
 	MemArray[PCBPtr + GPR6] = gpr[6];
 	MemArray[PCBPtr + GPR7] = gpr[7];
-
-	printf("BITCH HERE2: %ld\n", pc);
 	MemArray[PCBPtr + SP] = sp;
 	MemArray[PCBPtr + PC] = pc;
-	printf("BITCH HERE3: %ld\n", MemArray[PCBPtr + PC]);
 
 	return;
 }
@@ -2357,31 +2325,50 @@ long SelectProcessFromRQ()
 	return(PCBptr);
 }//end of SelectProcessFromRQ()
 
+// ************************************************************
+// Function: fetchProgInfo
+//
+// Task Description:
+//	Saves info for a process about to enter CPU into a 
+//	global structure CurrProg that holds addresses, size, and PID.
+//	Uses PCBptr to obtian the current process PID, then compares
+//	that PID with every process PID that's been created in a global 
+//	structure array Progs[]. This was implemented for easier access
+//	of information inside CPU during executions.
+//
+// Input Parameters
+//	long RunningPCBptr
+//
+// Output Parameters
+//	OK	-	Function Successful
+//	ER_INVALID_PID	-		PID was not found in created PIDs
+// ************************************************************
 int fetchProgInfo(long RunningPCBptr)
 {
-	long currentPID = MemArray[RunningPCBptr + PID];
-	int i = 0;
+	//Local Variables
+	long currentPID = MemArray[RunningPCBptr + PID];		//Saves current PID to local variables
+	int i = 0;																					//Index Variable
 	
-	while (i >= 0)
+	while (i >= 0)																			//While loop to traverse Progs[]
 	{
-		if(Progs[i].pid == currentPID)
+		if(Progs[i].pid == currentPID)										//Compares PID
 		{
-			CurrProg.StartAddress = Progs[i].StartAddress;
-			CurrProg.EndAddress = Progs[i].EndAddress;
-			CurrProg.size = Progs[i].size;
-			CurrProg.pid = Progs[i].pid;
-			return OK;
+			CurrProg.StartAddress = Progs[i].StartAddress;	//Saves Start address in CurrProg
+			CurrProg.EndAddress = Progs[i].EndAddress;			//Saves End address in CurrProg
+			CurrProg.size = Progs[i].size;									//Saves size in CurrProg
+			CurrProg.pid = Progs[i].pid;										//Saves PID in CurrProg
+			return OK;																			//Return OK
 		}
-		else if(i > 9)
+		else if(i > sizeof(Progs)-1)											//Checks if PID was not found if i is past sizeof(Progs)
 		{
-			printf("Invalid PID, process does not exist");
-			return ER_INVALID_PID;
+			printf("Invalid PID, process does not exist");	//Prints error message
+			return ER_INVALID_PID;													//Returns invalid PID error code
 		}
-		else
+		else																							//Continues traversal
 		{
-			i++;
+			i++;																						//Increment index variable
 		}
 	}
-	return -1;
+	printf("Logic error reached. Should return OK or Invalid PID codes.");	//Prints error message
+	return ER_LOGIC;																		//Returns logic error code
 }	
-	
