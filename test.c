@@ -1916,22 +1916,22 @@ void ISRinputCompletionInterrupt()
 					MemArray[pointer + GPR3] = Value;
 					MemArray[stackPtr] = Value;
 				}
-				else if(countDown == 4)
+				else if(countDown == 4)		//checks against countdown and defines the values in MemArray from value
 				{
 					MemArray[pointer + GPR4] = Value;
 					MemArray[stackPtr] = Value;
 				}
-				else if(countDown == 3)
+				else if(countDown == 3)		//checks against countdown and defines the values in MemArray from value
 				{
 					MemArray[pointer + GPR5] = Value;
 					MemArray[stackPtr] = Value;
 				}
-				else if(countDown == 2)
+				else if(countDown == 2)		//checks against countdown and defines the values in MemArray from value
 				{
 					MemArray[pointer + GPR6] = Value;
 					MemArray[stackPtr] = Value;
 				}
-				else if(countDown == 1)
+				else if(countDown == 1)		//checks against countdown and defines the values in MemArray from value
 				{
 					MemArray[pointer + GPR7] = Value;
 					MemArray[stackPtr] = Value;
@@ -2007,84 +2007,82 @@ void ISRoutputCompletionInterrupt()
 	long countUp = 2;
 	
 
-	waitPrev = NULL;
-	readyPrev = NULL;
-	//printf("what is whead? %ld", *whead);
-	waitCurrent = whead;
-	readyCurrent = rhead;
+	waitPrev = NULL;		//declares waitPrev to null
+	readyPrev = NULL;		//declared readyPrev to null
+	waitCurrent = whead;		//defines waitCurrent to whead
+	readyCurrent = rhead;		//defines readyCurrent to rhead
 	//Prompt and read PID of the process completing input completion interrupt;
 	printf("Enter PID of Process Completing Output Completion Interrupt: ");
 	scanf("%d", &input_PID);
 	//checks if PID is valid
 	if(input_PID < 0)
 	{
-		printf("Error reading user input, please close and try again.\n");
+		printf("Error reading user input, please close and try again.\n");		//prints out error message
 		return;
 	}
 	
-	while(waitCurrent != NULL)
+	while(waitCurrent != NULL)		//while waitCurrent is not at the end of the collection
 	{
-		if(MemArray[(waitCurrent -> waitProcess) + PID] == input_PID)
+		if(MemArray[(waitCurrent -> waitProcess) + PID] == input_PID)		//checks MemArray against input_PID
 		{
-			pointer = searchAndRemovePCBFromWQ(input_PID);
-			while (countDown > 0)
+			pointer = searchAndRemovePCBFromWQ(input_PID);		//sets pointer to searchAndRemovePcBFromWQ from the return of the input_PID
+			while (countDown > 0)		//checks the countdown
 			{
-				stackPtr = gpr[1] + countUp;
-				foundInWait = 1;
-				printf("here\n");
-				if(countDown == 5)
+				stackPtr = gpr[1] + countUp;		//sets stackPtr to the incremented gpr
+				foundInWait = 1;		//bool
+				if(countDown == 5)		//checks countdown against valid range
 				{
-					printf("GPR3: %c\n", (char)MemArray[pointer + GPR3]);
+					printf("GPR3: %c\n", (char)MemArray[pointer + GPR3]);		//print gpr value
 				}
 				else if(countDown == 4)
 				{
-					printf("GPR4: %c\n", (char)MemArray[pointer + GPR4]);
+					printf("GPR4: %c\n", (char)MemArray[pointer + GPR4]);		//print gpr value
 				}
 				else if(countDown == 3)
 				{
-					printf("GPR5: %c\n", (char)MemArray[pointer + GPR5]);
+					printf("GPR5: %c\n", (char)MemArray[pointer + GPR5]);		//print gpr value
 				}
 				else if(countDown == 2)
 				{
-					printf("GPR6: %c\n", (char)MemArray[pointer + GPR6]);
+					printf("GPR6: %c\n", (char)MemArray[pointer + GPR6]);		//print gpr value
 				}
 				else if(countDown == 1)
 				{
-					printf("GPR7: %c\n", (char)MemArray[pointer + GPR7]);
+					printf("GPR7: %c\n", (char)MemArray[pointer + GPR7]);		//print gpr value
 				}
-				countDown--;
-				countUp++;
+				countDown--;		//decrement the counter
+				countUp++;		//increment the counter
 			}
-			if(countDown == 0)
+			if(countDown == 0)		//checks against countDown
 			{
-				MemArray[pointer + STATE] = READY_STATE;
-				InsertIntoRQ(pointer);
+				MemArray[pointer + STATE] = READY_STATE;		//sets the pointer to the ready state value
+				InsertIntoRQ(pointer);		//call insert	into RQ with the pointer
 				break;
 			}
 		}
-		waitPrev = waitCurrent;
-		waitCurrent = waitCurrent -> next;
+		waitPrev = waitCurrent;		//update waitPrev
+		waitCurrent = waitCurrent -> next;		//update node to node.next
 	}
 
-	if(foundInWait == 0)
+	if(foundInWait == 0)	//checks if its found
 	{
-		while(readyCurrent != NULL)
+		while(readyCurrent != NULL)		//while not at the end of the list
 		{
-			if(MemArray[(readyCurrent -> readyProcess) + PID] == input_PID)
+			if(MemArray[(readyCurrent -> readyProcess) + PID] == input_PID)		//checks the readyCurrent against the input_PID
 			{
-				pointer = MemArray[readyCurrent -> readyProcess];
-				foundInReady = 1;
-				Value = val;
-				MemArray[pointer + GPR1 + 2] = Value;
+				pointer = MemArray[readyCurrent -> readyProcess];		//set pointer from the next ready process
+				foundInReady = 1;		//bool
+				Value = val;		//updates Value from val
+				MemArray[pointer + GPR1 + 2] = Value;		//updates incremented pointer location from Value
 				break;
 			}
-			readyPrev = readyCurrent;
-			readyCurrent = readyCurrent -> next;
+			readyPrev = readyCurrent;		//readyPrev is updated by readyCurrent
+			readyCurrent = readyCurrent -> next;		//readyCurrent is updated by node.next
 		}
 	}
-	if(foundInWait == 0 && foundInReady == 0)
+	if(foundInWait == 0 && foundInReady == 0)		//check in found
 	{
-		printf("PID not found.\n");
+		printf("PID not found.\n");		//throw error code
 	}
 	return;
 }  // end of ISRoutputCompletionInterrupt() function
