@@ -928,6 +928,8 @@ long CPU()
 		}  //End of switch opcode
 	}  //End of while loop
 
+DumpMemory("This is the Reschedule Dump", RQ , 200);
+
 	return (status);
 }  // end of CPU() function
 
@@ -1275,6 +1277,8 @@ long CreateProcess(char fileName[], long priority)	// or char * pointer
 
 	InsertIntoRQ(PCBptr);		// Store stack information in the PCB â€“ SP, ptr, and size
 	
+	DumpMemory("After process is created with the PCB", ptr, size);
+
 	return(OK);
 }  // end of CreateProcess() function
 
@@ -1664,6 +1668,7 @@ long InsertIntoRQ(long PCBptr) //Need to modify based on changes to local variab
 			currentPtr = MemArray[currentPtr + NEXT_PCB_POINTER];
 		}
 	}
+	DumpMemory("This is the ReadyQueue Dump", RQ, 200)
 	return(OK);
 }
 
@@ -1700,6 +1705,8 @@ long InsertIntoWQ (long PCBptr)
 	nextNode -> next = whead;				//nextNode is set to the waiting head
 	whead =  nextNode;							//whead is advanced to nextNode from LL
 	printWaitingQueue(whead);				//prints the queue
+
+	DumpMemory("This is the WaitingQueue Dump", PCBptr, 200);
 
 	return(OK);
 }//end of InsertIntoWQ() function
