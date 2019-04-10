@@ -1688,19 +1688,19 @@ long InsertIntoWQ (long PCBptr)
 	//check for invalid PCB memory address
 	if((PCBptr < 0) || (PCBptr > 10000)) //10000 = Max Memory Address
 	{
-		printf("Error, invalid address");
+		printf("Error, invalid address");		//print error code to user
 		return(ER_INVALID_ADDRESS);  // Error code < 0
 	}
 
 	MemArray[PCBptr + STATE] = WAITING_STATE;		// set state to ready state
 	MemArray[PCBptr + NEXT_PCB_POINTER] = WQ;	 // set next pointer to end of list
 
-	WQ = PCBptr;
-	struct WaitingNode *nextNode = (struct WaitingNode*)malloc(sizeof(struct WaitingNode));
-	nextNode -> waitProcess = WQ;
-	nextNode -> next = whead;
-	whead =  nextNode;
-	printWaitingQueue(whead);
+	WQ = PCBptr;		//defines the WQ as the first addr of the pcb
+	struct WaitingNode *nextNode = (struct WaitingNode*)malloc(sizeof(struct WaitingNode));		//constructs a new node from WQ struct
+	nextNode -> waitProcess = WQ;		//move forward one node within the list
+	nextNode -> next = whead;				//nextNode is set to the waiting head
+	whead =  nextNode;							//whead is advanced to nextNode from LL
+	printWaitingQueue(whead);				//prints the queue
 
 	return(OK);
 }//end of InsertIntoWQ() function
@@ -1719,11 +1719,10 @@ long InsertIntoWQ (long PCBptr)
 // Output Parameters
 //	None
 // ************************************************************
-void CheckAndProcessInterrupt()
+void CheckAndProcessInterrupt()		
 {
 	//local variables
 	int InterrruptID;
-	//long PCBptr = 
 
 	//prompt and read interrupt ID
 	printf("Select an Interrupt:\n\t0 - No Interrupt\n\t1 - Run Program\n\t2 - ShutDown System\n\t");
@@ -1905,15 +1904,15 @@ void ISRinputCompletionInterrupt()
 	{
 		if(MemArray[(waitCurrent -> waitProcess) + PID] == input_PID)		//checks PID against input PID from node
 		{
-			pointer = searchAndRemovePCBFromWQ(input_PID);
+			pointer = searchAndRemovePCBFromWQ(input_PID);		//sets pointer equal to the return of rm(input_PID)
 			while (countDown > 0)
 			{
-				stackPtr = gpr[1] + countUp;
-				foundInWait = 1;
-				printf("here\n");
-				scanf(" %c", &val);
-				Value = (long)val;
-				if(countDown == 5)
+				stackPtr = gpr[1] + countUp;		//define stackptr from gpr[1] with the countup offset
+				foundInWait = 1;		//bool struct		
+				scanf(" %c", &val);	//parse from user using the scanf, only accepts char
+				Value = (long)val;	//typecasting val back to long 
+				
+				if(countDown == 5)		//checks against countdown and defines the values in MemArray from value
 				{
 					MemArray[pointer + GPR3] = Value;
 					MemArray[stackPtr] = Value;
@@ -1938,48 +1937,46 @@ void ISRinputCompletionInterrupt()
 					MemArray[pointer + GPR7] = Value;
 					MemArray[stackPtr] = Value;
 				}
-				countDown--;
-				countUp++;
+				countDown--;	//decrement for logic
+				countUp++;		//increment for logic
 			}
-			if(countDown == 0)
+			if(countDown == 0)		//check countdown for end state
 			{
-				MemArray[pointer + STATE] = READY_STATE;
+				MemArray[pointer + STATE] = READY_STATE;	//sets the PCB back to ready state
 				InsertIntoRQ(pointer);
 				break;
 			}
 		}
 		waitPrev = waitCurrent;
-		waitCurrent = waitCurrent -> next;
+		waitCurrent = waitCurrent -> next;	//move waitcurrent forward in the collection
 	}
 
-	if(foundInWait == 0)
+	if(foundInWait == 0)		//checks against being found in wait
 	{
-		while(readyCurrent != NULL)
+		while(readyCurrent != NULL)		//checks if at the current node
 		{
-			if(MemArray[(readyCurrent -> readyProcess) + PID] == input_PID)
+			if(MemArray[(readyCurrent -> readyProcess) + PID] == input_PID)		//checks if the current PID is valid
 			{
-				pointer = MemArray[readyCurrent -> readyProcess];
-				foundInReady = 1;
-				printf("Input a single number: ");
-				scanf("%c", &val);
-				Value = val;
-				MemArray[pointer + GPR1 + 2] = Value;
+				pointer = MemArray[readyCurrent -> readyProcess];		//sets pointer
+				foundInReady = 1;		//bool hold
+				printf("Input a single number: ");		//output to user
+				scanf("%c", &val);		//parse from stdin
+				Value = val;		//updates value from stdin
+				MemArray[pointer + GPR1 + 2] = Value;		//updates MemArray
 				break;
 			}
-			readyPrev = readyCurrent;
-			readyCurrent = readyCurrent -> next;
+			readyPrev = readyCurrent;		//increment node
+			readyCurrent = readyCurrent -> next;		//shift node
 		}
 	}
-	if(foundInWait == 0 && foundInReady == 0)
+	if(foundInWait == 0 && foundInReady == 0)		//check if not found
 	{
-		printf("PID not found.\n");
+		printf("PID not found.\n");		//throw error
 	}
 	return;
 }  // end of ISRinputCompletionInterrupt() function
 
 // ************************************************************
-// Author: Brian Tejada
-//
 // Function: ISRoutputCompletionInterrupt
 //
 // Task Description:
@@ -2005,8 +2002,6 @@ void ISRoutputCompletionInterrupt()
 	struct ReadyNode *readyCurrent;
 	long pointer;
 	long stackPtr;
-	//long counter;
-	//long temp;
 	char val;
 	long Value;
 	long countDown = 5;
@@ -2128,6 +2123,19 @@ void terminateProcess(long PCBptr)
 
 }  // end of TerminateProcess function()
 
+// ************************************************************
+// Function: memAllocSystemCall()
+// allocate memory for the system
+//
+// Task Description:
+//	allocate memory to system calls
+//
+// Input Parameters
+//	None
+//
+// Output Parameters
+//	calid general purpose register
+// ************************************************************
 long memAllocSystemCall()
 {
 	long size = gpr[2];
@@ -2137,45 +2145,71 @@ long memAllocSystemCall()
 		printf("Error, invalid size.\n");
 		return(ER_INVALID_SIZE);  // ErrorInvalidMemorySize is constant < 0 **FIX EROOR CODE**
 	}
-	if(size == 1)
+	if(size == 1)		//checks to see if memory allocation is valid
 	{
-		size = 2;
+		size = 2;		//forces valid size
 	}
 
-	gpr[1] = AllocateUserMemory(size);
+	gpr[1] = AllocateUserMemory(size);		//update register 1 with memallocUser of (size) param
 	
-	if(gpr[1] < 0)
+	if(gpr[1] < 0)		//checks against gpr[1]
 	{
-		gpr[0] = gpr[1];
+		gpr[0] = gpr[1];		//forces update
 	}
 	else
 	{
-		gpr[0] = OK;
+		gpr[0] = OK;	//decalres valid range
 	}
 
 	printf("memAllocSystemCall has been called, displaying GPR 0 - 2: %ld, %ld, %ld\n", gpr[0], gpr[1], gpr[2]);
 	return gpr[0];
 }
 
+// ************************************************************
+// Function: memFreeSystemCall()
+//		recover all resources allocated to the previous systemcall
+//
+// Task Description:
+//	release memory resources
+//
+// Input Parameters
+//	None
+//
+// Output Parameters
+//	valid gpr containing addr of free memory
+// ************************************************************
 long memFreeSystemCall()
 {
 	long size = gpr[2];
-	if(size < 0)
+	if(size < 0)		//checks size against valid range
 	{
 		printf("Error, invalid size.\n");
-		return(ER_INVALID_SIZE);  // ErrorInvalidMemorySize is constant < 0 **FIX EROOR CODE**
+		return(ER_INVALID_SIZE);		//throw error code
 	}
-	if(size == 1)
+	if(size == 1)		//check error code
 	{
 		size = 2;
 	}
 
-	gpr[0] = FreeUserMemory(sp, size); //****Needs to pass gpr[1] as argument too****
+	gpr[0] = FreeUserMemory(sp, size); 
 
 	printf("memFreeSystemCall has been called, displaying GPR 0 - 2: %ld, %ld, %ld,", gpr[0], gpr[1], gpr[2]);
-	return gpr[0];
+	return gpr[0];	//return gpr to satisfy params
 }
-	//brian Creations
+
+// ************************************************************
+// Function: io_getcSystemCall()
+//		pass information to system call
+//
+// Task Description:
+//	pass information from program to system calls
+//
+// Input Parameters
+//	None
+//
+// Output Parameters
+//	Returns the operand of the function
+// ************************************************************
 long io_getcSystemCall ()
 {
 	//Return start of input operation event code;
@@ -2189,54 +2223,77 @@ long io_putcSystemCall ()
 	return Output_Operation_Event_Code;
 }  // end of io_putc system call
 
-//cams child
+// ************************************************************
+// Function: searchAndRemovePCBFromWQ
+//
+// Task Description:
+//	find the node that contains the PCB head addr, removes the PCB from the collection
+//
+// Input Parameters
+//	PID of the PCB 
+//
+// Output Parameters
+//	Error code check
+// ************************************************************
 long searchAndRemovePCBFromWQ(long pid)
 {
+	//Local Variables
 	struct WaitingNode *prev;
 	struct WaitingNode *current;
 	long found = 0;
 	long pointer;
 	prev = NULL;
 	current = whead;
-	while(current != NULL)
+	
+	while(current != NULL)	//checks that the current node is not the last node
 	{
-		if(MemArray[(current -> waitProcess) + PID] == pid)
+		if(MemArray[(current -> waitProcess) + PID] == pid)		//sets the process to the current PID 
 		{
-			if(prev == NULL)
+			if(prev == NULL)		//checks that you are outside the PCB
 			{
-				printf("FOund PID in head\n");
-				pointer = current -> waitProcess;
-				printf("PPPPPPPointer %ld\n", pointer);
-				found = 1;
-				whead = current -> next;
-				free(current);
+				pointer = current -> waitProcess;		//moves the pointer
+				found = 1;		//bool
+				whead = current -> next;		//advances whead
+				free(current);		//release memory
 				break;
 			}
 			else
 			{
-				printf("FOund PID in elsewhere\n");
-				pointer = current -> waitProcess;
-				found = 1;
-				prev -> next = current -> next;
-				free(current);
+				pointer = current -> waitProcess;		//moves pointer
+				found = 1;		//bool
+				prev -> next = current -> next;		//decrements the pointer from the previous node 
+				free(current);		//free memory being used
 				break;
 			}
 		}
-		prev = current;
-		current = current -> next;
+		prev = current;		//decrements the previous
+		current = current -> next;		//increments the current node to next
 	}
 
-	if(found == 0)
+	if(found == 0)		//checks against error
 	{
 		printf("Invalid PID. \n");
-		return(END_OF_LIST);
+		return(END_OF_LIST);		//throws error
 	}
-	return(pointer);
+	return(pointer);		//return pointer to call
 }
 
+// ************************************************************
+// Function: dispacter
+//		sets all of the values for the gpr's
+//
+// Task Description:
+//	sets the gpr's to their assigned memorry addresses
+//
+// Input Parameters
+//	PCBptr
+//
+// Output Parameters
+//	None
+// ************************************************************
 void Dispatcher(long PCBPtr)
 {
-	gpr[0] = MemArray[PCBPtr + GPR0];
+	gpr[0] = MemArray[PCBPtr + GPR0];		//sets the gpr to its accociated place in memory sqeuntially 
 	gpr[1] = MemArray[PCBPtr + GPR1];
 	gpr[2] = MemArray[PCBPtr + GPR2];
 	gpr[3] = MemArray[PCBPtr + GPR3];
@@ -2245,16 +2302,29 @@ void Dispatcher(long PCBPtr)
 	gpr[6] = MemArray[PCBPtr + GPR6];
 	gpr[7] = MemArray[PCBPtr + GPR7];
 
-	sp = MemArray[PCBPtr + SP];
-	pc = MemArray[PCBPtr + PC];
+	sp = MemArray[PCBPtr + SP];		//sets the stack pointer head
+	pc = MemArray[PCBPtr + PC];		//sets the program counter head
 
-	psr = USER_MODE;
+	psr = USER_MODE;		//sets the mode to user mode with constant
 	return;
 }
 
+// ************************************************************
+// Function: saveContext()
+//		save the information to the general purpose registers
+//
+// Task Description:
+//	set the data within the register array
+//
+// Input Parameters
+//	PCBptr
+//
+// Output Parameters
+//	None
+// ************************************************************
 void saveContext(long PCBPtr)
 {
-	MemArray[PCBPtr + GPR0] = gpr[0];
+	MemArray[PCBPtr + GPR0] = gpr[0];		//sets the values into their corresponding gpr index. 
 	MemArray[PCBPtr + GPR1] = gpr[1];
 	MemArray[PCBPtr + GPR2] = gpr[2];
 	MemArray[PCBPtr + GPR3] = gpr[3];
@@ -2268,61 +2338,96 @@ void saveContext(long PCBPtr)
 	return;
 }
 
-//brian
+// ************************************************************
+// Function: printWaitingQueue
+//		print all of the nodes within the WQ
+//
+// Task Description:
+//	use a loop to iterate through the collection and print the values
+//
+// Input Parameters
+//	head node pointer
+//
+// Output Parameters
+//	error checking code
+// ************************************************************
 long printWaitingQueue(struct WaitingNode *n)
 {
-	printf("Contents of Waiting Queue\n");
-  while (n != NULL)
+	printf("Contents of Waiting Queue\n");		//print statement 
+  while (n != NULL)		//while not at the end of the collection
   {
-     printf(" Wait Process: %ld\n", n -> waitProcess);
-     n = n -> next;
+     printf(" Wait Process: %ld\n", n -> waitProcess);		//print what the waiting process is
+     n = n -> next;		//increment through code
   }
-	return(OK);
-}//end printWaitingQueue()
+	return(OK);		//return passing code
+}
 
+// ************************************************************
+// Function: printReadyQueue
+//		print the contents of the ready queue
+//
+// Task Description:
+//	iterate through the collection and print the contents of each node
+//
+// Input Parameters
+// 	ReadyQueue node pointing to head
+//
+// Output Parameters
+//	error code checking
+// ************************************************************
 long printReadyQueue(struct ReadyNode *n)
 {
-	printf("Contents of Ready Queue\n");
-  while (n != NULL)
+	printf("Contents of Ready Queue\n");		//print statement to declare output
+  while (n != NULL)		//while not at the end of the collection
   {
-     printf("Ready Process: %ld\n", n -> readyProcess);
-     n = n -> next;
+     printf("Ready Process: %ld\n", n -> readyProcess);		//print the process
+     n = n -> next;		//incriment the node
   }
-	return(OK);
-}//end printReadyQueue()
+	return(OK);		//return code
+}
 
-//brian did it
+// ************************************************************
+// Function: SelectProcessFromRQ()
+//		select a specific PCB from the RQ
+//
+// Task Description:
+//	iterate through the collection looking for a specific PCB head
+//
+// Input Parameters
+//	None
+//
+// Output Parameters
+//	None
+// ************************************************************
 long SelectProcessFromRQ()
 {
-	printf("Enter RQ Selcetet\n");
-	long PCBptr = RQ;
-	struct ReadyNode *currenthead = rhead;
-	long size = 22;
-	printf("RQ:%ld\n", RQ);
-	if(RQ != END_OF_LIST)
+	//local variables
+	long PCBptr = RQ;		//set the pointer equal to the head of RQ
+	struct ReadyNode *currenthead = rhead;		//create a new ReadyNode of current called rhead
+	long size = 22;		//size of the PCB
+	
+	printf("Enter RQ Selcetet\n");		//print action
+	
+	printf("RQ:%ld\n", RQ);	//print the elements of the RQ
+	
+	if(RQ != END_OF_LIST)		//if you are not at the end of the list
 	{
-		printf("HEAD NULL\n");
-		// Remove first PCB from RQ
-		printf("GET COntent of curerent head node\n");
-		PCBptr = currenthead -> readyProcess;
-		printf("rhead point to 2nd node in linked list\n");
-		rhead = currenthead -> next;
-		printf("Change rhead to new head\n");
-		free(currenthead);
+		PCBptr = currenthead -> readyProcess;		//sets the PCBptr based on next
+		rhead = currenthead -> next;		//updates head
+		free(currenthead);		//frees the last node to system
 	}
-	printf("New Point NULL\n");
-	// Set next point to EOL in the PCB
-	MemArray[PCBptr] = PCBptr + size;
-	if(rhead == NULL)
+	
+	MemArray[PCBptr] = PCBptr + size;		//defines pcbptr with the size offset
+	if(rhead == NULL)		//checks if EOL
 	{
-		RQ = END_OF_LIST;
+		RQ = END_OF_LIST;		//sets RQ to EOL
 	}
 	else
 	{
-		RQ = rhead -> readyProcess;
+		RQ = rhead -> readyProcess;		//increment RQ
 	}
 	
-	return(PCBptr);
+	return(PCBptr);		//return PCBptr to call
 }//end of SelectProcessFromRQ()
 
 // ************************************************************
