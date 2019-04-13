@@ -1,17 +1,16 @@
 // ************************************************************
 // Jacob Terren, Angus Guinen, Brian Tejada, Cam Turner
-// 300961195, 300924323, 30095770,
+//  300961195     300924323     300957720    300961566
 // CSCI.465: Operating Systems Internals
 // Homework #2
 // 4/9/2019
-
+//
 // Program Description:
 // The purpose of this program is to create a MTOPS machine simulator.
 // It will be able to execute machine language programs, utilizing
 // the memory made available to the MTOPS Sim., "hardware" registers,
 // and various functions (ADD, SUB, DIV, MULT, FETCH, etc.)
 // ************************************************************
-
 //library declaration statements
 #include <stdio.h>
 #include <string.h>
@@ -71,20 +70,23 @@
 	#define ER_INVALID_ID 	-20				//defines invalid process id out of range
 	#define ER_LOGIC				-21				//Something happened that shouldn't happen
 
-
-//Structures
+//Structures: 
+//Created by: Brian Tejada
+//Aided by: Cam Turner & Angus Guinen
 	struct WaitingNode //nodes for the Waiting Queue Linked list
 	{
 		long waitProcess; 						//points to the front most PCB in the queue
 		struct WaitingNode *next; 		//points to the next node in the queue
 	};
-
+	//Created by: Brian Tejada
+	//Aided by: Cam Turner & Angus Guinen
 	struct ReadyNode //nodes for the Ready Queue Linked List
 	{
 		long readyProcess;						//points to the PCB to be inserted
 		struct ReadyNode *next;				//points to the next node in the queue
 	};
 
+//Created by: Jake Terren
 	struct ProgramInfo	//Used to store start address, size, and end address of the Assembly program in the stack
 	{
 		long StartAddress;	//Stores start address
@@ -93,6 +95,7 @@
 		long pid;
 	};
 
+//Created by: Jake Terren
 	struct InstructionInfo	//Holds information for current instruction of assembly progra
 	{
 		long Opcode;	//Stores value of Operand code
@@ -131,7 +134,6 @@
 	long SystemShutdownStatus = 1; //initialize System Shutdown status to 1
 	struct WaitingNode *whead = NULL;	//creates a waiting node head
 	struct ReadyNode *rhead = NULL;	//creates a readynode for the RQ
-
 	long priority = DEF_PRIORITY;	//defines the default priority
 
 
@@ -170,7 +172,7 @@
 	
 // ************************************************************
 // Function: InitializeSystem
-//
+//	Created by: Jake Terren
 // Task Description:
 // 	Initializes all hardware components to zero, this function is called once from main,
 // at start up of HYPO machine.
@@ -220,12 +222,12 @@ void InitializeSystem()	//Begin InitializeSystem() function
 	MemArray[OSFreeList] = END_OF_LIST;
 	MemArray[OSFreeList+1] = 3000;
 
-	CreateProcess("ognull.txt", 0); //CreateProcess function passing Null Process Executable File and priority zero as arguments
+	CreateProcess("NullProcess.txt", 0); //CreateProcess function passing Null Process Executable File and priority zero as arguments
 }  //End InitializeSystem() function
 
 // ******************************************************
 // function: main
-//
+//	Created by: Jake Terren
 // Task Description:
 // 	Main function of the program, it's purposes are; to call InitializeSystem() function,
 // ask for user to input a filename, call AbsoluteLoader() function with user input as
@@ -258,15 +260,14 @@ int main()	//Start of main function
 
 		// Select next process from RQ to give CPU
 		RunningPCBptr = SelectProcessFromRQ();  // call the function
-		printf("RQ selected\n");
 		// Perform restore context using Dispatcher
 		Dispatcher(RunningPCBptr);
 
 		printReadyQueue(rhead);			//Dumps Ready Queue After Selecting Process from RQ
 		PrintPCB(RunningPCBptr);		//Dump Running PCB and CPU Context passing
-		DumpMemory("Before executing user program", 0, 199);	//Dumps Main Memory from adress 0 to address 99 after executing test program
-		DumpMemory("1LOOK IN MY PANTS BITCHESS", 3000, 199);
-		DumpMemory("2LOOK IN MY PANTS BITCHESS", 7000, 199);
+		DumpMemory("Before Executing User Program", 0, 199);	//Dumps Main Memory from adress 0 to address 99 after executing test program
+		DumpMemory("Before Executing User Dynamic Memory", 3000, 199);
+		DumpMemory("Before Executing OS Dynamic Memory", 7000, 199);
 		ExeCompStat = fetchProgInfo(RunningPCBptr);
 		if(ExeCompStat == OK)
 		{
@@ -279,15 +280,13 @@ int main()	//Start of main function
 		}
 
 		DumpMemory("After executing user program", 0, 199);	//Dumps Main Memory from adress 0 to address 99 after executing test program
-		DumpMemory("3LOOK IN MY PANTS BITCHESS", 3000, 199);
-		DumpMemory("4LOOK IN MY PANTS BITCHESS", 7000, 199);
+		DumpMemory("After Executing User Dynamic Memory", 3000, 199);
+		DumpMemory("After Executing OS Dynamic Memory", 7000, 199);
 
 		// Check return status reason for giving up CPU
 		if(ExeCompStat == TIME_DEPLETED)
 		{
-			printf("AFter CPU() PCBptr: %ld\n", RunningPCBptr);
 			InsertIntoRQ(RunningPCBptr);
-			printf("Came out of InsertIntoRQ\n");
 			RunningPCBptr = END_OF_LIST;
 		}
 		else if(ExeCompStat <= 0)  // Halt or run-time error
@@ -305,7 +304,6 @@ int main()	//Start of main function
 		{
 			MemArray[RunningPCBptr + WAITING_CODE] = Output_Operation_Event_Code;
 			InsertIntoWQ(RunningPCBptr);
-
 			RunningPCBptr = END_OF_LIST;
 		}
 		else
@@ -322,7 +320,7 @@ int main()	//Start of main function
 
 // ********************************************************************
 // Function: AbsoluteLoader
-//
+//	Created by: Jake Terren
 // Task Description:
 // 	To open the test program file, read the file, and save contents to the appropriate addresses provided in the file.
 //
@@ -368,14 +366,12 @@ char fileName[])		//File name of test program
 		fclose(filePtr);	//Close filePtr before function ends
 		return(ER_READ_FAILED);	//If read fails return ER_READ_FAILED code
 	}
-	printf("Executing while loop\n");
 	ptr = strtok(buffer, "\t\n"); 	//Tokenizes strings in buffer to ptr
 	while (ptr != NULL)	//Executes while loop as long as ptr has a new token
 	{
 		strcpy(temp, ptr);	//Copies string token to temp as a string
 		if(count == 0)	//At first loop grabs necessary info to be used in the future
 		{
-			printf("checking program counter\n");
 			MemIndex = nextAddress;	//Saves address for Main Memory to put content in
 			FirstAddress = atoi(temp)+MemIndex;	//Saves the first address to check range validity in the future
 			ptr = strtok(NULL, "\t\n");	//Grabs next string token which will be content to be saved
@@ -395,7 +391,7 @@ char fileName[])		//File name of test program
 				Progs[progsIndex].StartAddress = FirstAddress;	//Saves first address of the test program to program info
 				Progs[progsIndex].size = count;	//Saves number of instructions in the test program to program info
 				Progs[progsIndex].EndAddress = FirstAddress + count - 1;	//Saves last address of the test program to program info
-				printf("\nnextAddress: %ld", nextAddress);
+		
 				return(atoi(temp) + nextAddress);	//Returns Beginning of program address to Main() to save to PC
 			}
 			else	//else if value is not in the test programs address range throw error
@@ -422,13 +418,12 @@ char fileName[])		//File name of test program
 		printf("Assembly program does not contian end of program indicator (-1), fix and try again.");
 		return (ER_NO_END_IND);	//Returns No End of Program indicator error code
 	}
-	printf("\nPC value: %ld", returnInstr);
 	return(returnInstr);	//Return to main
 }  //End of AbsoluteLoader function
 
 // ************************************************************
 // Function: CPU
-//
+//	Created by: Jake Terren
 // Task Description:
 // 	Executes test program saved in main memory.
 //
@@ -473,7 +468,7 @@ long CPU()
 		}
 		else	//Else throw invalid address error
 		{
-			printf("#1Invalid address runtime error, pc value: %ld\n", pc);
+			printf("Invalid address runtime error, pc value: %ld\n", pc);
 			return (ER_INVALID_ADDRESS);	//returns invalid address error code
 		}
 
@@ -706,9 +701,7 @@ long CPU()
 				else
 				{
 					Op.Op1Value = Op.OpValue;	//Saves value from FetchOperand to Op.Op1Value
-					printf("CPU Op1Val: %ld\n", Op.Op1Value);
 					Op.Op1Address = Op.OpAddress;	//Saves address from FetchOperand to Op.Op1Address
-					printf("CPU Op1Address: %d\n", Op.Op1Address);
 				}
 
 				status = FetchOperand(Op.Op2Mode, Op.Op2Gpr, Op.Op2Address, Op.Op2Value);	//Fetches second value and address
@@ -717,9 +710,7 @@ long CPU()
 				else
 				{
 					Op.Op2Value = Op.OpValue;	//Saves value from FetchOperand to Op.Op2Value
-					printf("CPU Op2Val: %ld\n", Op.Op2Value);
 					Op.Op2Address = Op.OpAddress;	//Saves address from FetchOperand to Op.Op2Address
-					printf("CPU Op2Address: %d\n", Op.Op2Address);
 				}
 				
 				if (Op.Op1Mode == 1)	//If Operand 1 mode is register mode
@@ -746,7 +737,7 @@ long CPU()
 				}
 				else
 				{
-					printf("#2Invalid address runtime error, pc value: %ld\n", pc);;
+					printf("Invalid address runtime error, pc value: %ld\n", pc);;
 					return (ER_INVALID_ADDRESS);	//returns Invalid address error
 				}
 
@@ -763,17 +754,15 @@ long CPU()
 					Op.Op1Value = Op.OpValue;	//Saves value from FetchOperand to Op.Op1Value
 					Op.Op1Address = Op.OpAddress;	//Saves address from FetchOperand to Op.Op1Address
 				}
-				printf("Op1Val: %ld\n", Op.Op1Value);
 				if(Op.Op1Value < 0) //If operand value is less than zero...
 				{
 					if(CurrProg.StartAddress <= (MemArray[pc] + CurrProg.StartAddress) && (MemArray[pc] + CurrProg.StartAddress) <  CurrProg.EndAddress) //...and new PC is in valid range
 					{
 						pc = MemArray[pc] + CurrProg.StartAddress;	//Then jump to new PC address
-						printf("Jump to: %ld\n", pc);
 					}
 					else	//else if new PC is not in valid range then throw error
 					{
-						printf("#3Invalid address runtime error, pc value: %ld\n", pc);;
+						printf("Invalid address runtime error, pc value: %ld\n", pc);;
 						return (ER_INVALID_ADDRESS);	//Returns invalid address error
 					}
 				}
@@ -804,7 +793,7 @@ long CPU()
 					}
 					else	//else if new PC is not in valid range then throw error
 					{
-						printf("#4Invalid address runtime error, pc value: %ld\n", MemArray[pc]);
+						printf("Invalid address runtime error, pc value: %ld\n", MemArray[pc]);
 						return (ER_INVALID_ADDRESS);	//Returns invalid address error
 					}
 				}
@@ -935,7 +924,7 @@ DumpMemory("This is the Reschedule Dump", RQ , 200);
 
 // ************************************************************
 // Function: FetchOperand
-//
+//	Created by: Jake Terren
 // Task Description:
 // 	Fetches address and content for each operand based on modes
 //
@@ -977,23 +966,20 @@ long  OpValue   //Operand value, output parameter
 			}
 			else	//Throws error if address is invalid
 			{
-				printf("1 Invalid operand address: %d\n", OpAddress);
+				printf("Invalid operand address: %d\n", OpAddress);
 				return (ER_INVALID_OP_ADDRESS);	//Returns invalid address error
 			}
 		break;
 
 		case 3:  // Autoincrement mode - Op address is in GPR and Op value is in main memory
-			printf("Opreg: %ld\n", OpReg);
 			OpAddress = gpr[OpReg];   // Grabs Operand address from GPR
-			printf("Address: %d\n", OpAddress);
 			if(0 <= OpAddress && OpAddress < 9999)	//If address is in valid range
 			{
 			    Op.OpValue = MemArray[OpAddress];  //Grabs operand value from Main Memory
-					printf("OpVal: %ld\n", Op.OpValue);
 			}
 			else	//Throws error if address is invalid
 			{
-				printf("2 Invalid operand address: %d\n", OpAddress);
+				printf("Invalid operand address: %d\n", OpAddress);
 				return (ER_INVALID_OP_ADDRESS);	//Returns invalid address error
 			}
 			gpr[OpReg]++;    //Increments register content by 1
@@ -1008,7 +994,7 @@ long  OpValue   //Operand value, output parameter
 			}
 			else	//Throws error if address is invalid
 			{
-				printf("3 Invalid operand address: %d\n", OpAddress);
+				printf("Invalid operand address: %d\n", OpAddress);
 				return (ER_INVALID_OP_ADDRESS);	//Returns invalid address error
 			}
 		break;
@@ -1025,13 +1011,13 @@ long  OpValue   //Operand value, output parameter
 				}
 				else	//Throws error if operand address is invalid
 				{
-					printf("4 Invalid operand address: %d\n", OpAddress);
+					printf("Invalid operand address: %d\n", OpAddress);
 					return (ER_INVALID_OP_ADDRESS);	//Returns invalid address error
 				}
 			}
 			else	//Throws error if PC address is invalid
 			{
-				printf("5 Invalid pc address: %ld, %ld\n", pc, CurrProg.pid);
+				printf("Invalid pc address: %ld, %ld\n", pc, CurrProg.pid);
 				return (ER_INVALID_OP_ADDRESS);	//Returns invalid address error
 			}
 		break;
@@ -1045,7 +1031,7 @@ long  OpValue   //Operand value, output parameter
 			}
 			else	//Throws error if PC address is invalid
 			{
-				printf("6 Invalid operand address: %ld\n", pc);
+				printf("Invalid operand address: %ld\n", pc);
 				return (ER_INVALID_OP_ADDRESS);	//Returns invalid address error
 			}
 		break;
@@ -1061,7 +1047,7 @@ long  OpValue   //Operand value, output parameter
 
 // ************************************************************
 // Function: DumpMemory
-//
+//	Created by: Jake Terren
 // Task Description:
 //	Displays contents of Main Memory in the range provided by input parameters. Also displays
 //	values of GPRs, SP, PC, PSR, and Clock. All content is displayed in a specific format
@@ -1115,7 +1101,7 @@ long size)
 
 // ************************************************************
 // Function: SystemCall
-//
+//	Created by: Jake Terren
 // Task Description:
 //	Takes input parameter SystemCallID and then using that to determine which function to
 //	execute in a switch statement. There are 9 possible cases; CreateProcess, DeleteProcess,
@@ -1201,18 +1187,23 @@ long SystemCall(long SystemCallID)
 
 // ************************************************************
 // Function: CreateProcess
-//
+//	Created by: Jake Terren
 // Task Description:
 //	Takes input parameter fileName, and priority. Loads file to count size of program,
 //	then calls AllocateUserMem
 //
 // Input Parameters
-//
+//	char fileName[]
+//	long priority
 // Output Parameters
 //	None
 //
 // Function Return Value
-//	OK					- Successful SystemCall
+//	OK					- Successful function
+//	PCBptr 			- Holds error code from AllocateOSMemory()
+//	ER_STACK_OVERFLOW	- Stack overflow
+//	ER_INVALID_SIZE		- Invalid size
+//	ER_ABS_LOAD_FAIL	- Absolute loader failed
 // ************************************************************
 long CreateProcess(char fileName[], long priority)	// or char * pointer
 {
@@ -1237,7 +1228,6 @@ long CreateProcess(char fileName[], long priority)	// or char * pointer
 		}
 
   InitializePCB(PCBptr);		// Initialize PCB: Set nextPCBlink to end of list, default priority, Ready state, and PID
-	printf("Came out of Initialize");
   		
 			// Load the program
 	
@@ -1284,16 +1274,18 @@ long CreateProcess(char fileName[], long priority)	// or char * pointer
 
 // ************************************************************
 // Function: AllocateOSMemory
-//
+//	Created by: Jake Terren
 // Task Description:
-//
+//	Allocate OS memory by using size and CurrentPtr
 // Input Parameters
-//
+//	long size
 // Output Parameters
 //	None
 //
 // Function Return Value
-//	OK					- Successful SystemCall
+//	CurrentPtr				- Successful allocate, returns current address in OS
+//	ER_STACK_OVERFLOW	- Stack Overflow
+//	ER_INVALID_SIZE		-	Invalid size
 // ************************************************************
 long AllocateOSMemory(long size)  // return value contains address or error
 {
@@ -1364,11 +1356,11 @@ long AllocateOSMemory(long size)  // return value contains address or error
 
 // ************************************************************
 // Function: InitializePCB
-//
+//	Created by: Jake Terren
 // Task Description:
-//
+//	Initializes new PCB with necessary info
 // Input Parameters
-//
+//	long PCBptr
 // Output Parameters
 //	None
 //
@@ -1392,9 +1384,9 @@ void InitializePCB(long PCBptr)
 
 // ************************************************************
 // Function: AllocateUserMemory
-//
+//  Created by: Jake Terren
 // Task Description:
-//
+//	Allocates User Memory based on size and CurrentPtr
 // Input Parameters
 //
 // Output Parameters
@@ -1408,7 +1400,6 @@ long AllocateUserMemory(long size)  // return value contains address or error
 	//Local Variables
 	long CurrentPtr;
 	long PreviousPtr;
-
 
 	if(UserFreeList == END_OF_LIST)			// Allocate memory from OS free space, which is organized as link
     {
@@ -1427,7 +1418,6 @@ long AllocateUserMemory(long size)  // return value contains address or error
   PreviousPtr = END_OF_LIST;	//Defines PreviousPtr from EOL of list
   while (CurrentPtr != END_OF_LIST)
   {
-		
 		if(MemArray[CurrentPtr + 1] == size)		// Check each block in the link list until block with requested memory size is found
 		{  
 			if(CurrentPtr == UserFreeList)  // Found block with requested size.  Adjust pointers
@@ -1473,7 +1463,7 @@ long AllocateUserMemory(long size)  // return value contains address or error
 
 // ************************************************************
 // Function: FreeOSMemory
-//
+//	Created by: Jake Terren
 // Task Description:
 //
 // Input Parameters
@@ -1516,7 +1506,7 @@ long FreeOSMemory(long ptr, long size)  // return value contains OK or error cod
 
 // ************************************************************
 // Function: FreeUserMemory
-//
+//	Created by: Jake Terren
 // Task Description:
 //
 // Input Parameters
@@ -1529,6 +1519,8 @@ long FreeOSMemory(long ptr, long size)  // return value contains OK or error cod
 // ************************************************************
 long FreeUserMemory(long ptr, long size)  // return value contains OK or error code
 {
+	printf("ptr in FreeMem: %ld\n", ptr);
+	printf("Size in FreeMem: %ld\n", size);
 	if(ptr < 3000 || ptr > 6999)  	// Address range is given in the class
 	{
 		printf("Error, Invalid address");
@@ -1559,7 +1551,7 @@ long FreeUserMemory(long ptr, long size)  // return value contains OK or error c
 
 // ************************************************************
 // Function: PrintPCB
-//
+//	Created by: Jake Terren
 // Task Description:
 //
 // Input Parameters
@@ -1594,7 +1586,7 @@ void PrintPCB(long PCBptr)
 
 // ************************************************************
 // Function: InsertIntoRQ
-//
+//	//Created by: Jake Terren
 // Task Description:
 //
 // Input Parameters
@@ -1652,7 +1644,6 @@ long InsertIntoRQ(long PCBptr) //Need to modify based on changes to local variab
 				return(OK);		//return OK after operand
 			}
 		
-			
 			MemArray[PCBptr + NEXT_PCB_POINTER] = MemArray[previousPtr + NEXT_PCB_POINTER];		//redefine the head of RQ
 			MemArray[previousPtr + NEXT_PCB_POINTER] = PCBptr;		//Sets the main memory addr
 			temp -> next = nextNode;		//the value of next within temp
@@ -1668,15 +1659,17 @@ long InsertIntoRQ(long PCBptr) //Need to modify based on changes to local variab
 			currentPtr = MemArray[currentPtr + NEXT_PCB_POINTER];
 		}
 	}
-	DumpMemory("This is the ReadyQueue Dump", RQ, 200)
+	DumpMemory("This is the ReadyQueue Dump", RQ, 200);
 	return(OK);
 }
 
 //************************************************************
 //
 // Function: InsertIntoWQ
-//
+//	Created by: Brian Tejada
+//	Worked on by: Jake Terren
 // Task Description:
+//		Store a process awaitng input/Ouut Operations into the head of the Waiting Queue
 //
 // Input Parameters
 //	long PCBptr
@@ -1749,7 +1742,6 @@ void CheckAndProcessInterrupt()
 		case 1:
 			//call ISR run Program Interrupt function
 			ISRrunProgramInterrupt();
-			printf("Came out of runProgramInterrupt\n");
 			break;
 		// Shutdown system
 		case 2:
@@ -1777,11 +1769,12 @@ void CheckAndProcessInterrupt()
 }//end of CheckAndProcessInterrupt() function
 
 // ************************************************************
+// Author: Brian Tejada
 //
 // Function: ISRrunProgramInterrupt
 //
 // Task Description:
-//	read filename and creat process
+//	reads filename and creates process based of the file's contents
 //
 // Input Parameters
 //	None
@@ -1810,6 +1803,8 @@ void ISRrunProgramInterrupt()
 }//end of ISRrunProgramInterrupt() function
 
 // ************************************************************
+// Author: Cam Turner
+//
 // Function: ISRshutdownSystem
 //
 // Task Description:
@@ -1862,6 +1857,8 @@ void ISRshutdownSystem()
 
 // ************************************************************
 // Function: ISRinputCompletionInterrupt
+//	Author: Cam Turner
+//	Worked on: Jake Terren, Brian Tejada
 //
 // Task Description:
 //	read PID of the process completing the io_getc operation
@@ -1966,7 +1963,7 @@ void ISRinputCompletionInterrupt()
 				pointer = MemArray[readyCurrent -> readyProcess];		//sets pointer
 				foundInReady = 1;		//bool hold
 				printf("Input a single number: ");		//output to user
-				scanf("%c", &val);		//parse from stdin
+				scanf(" %c", &val);		//parse from stdin
 				Value = val;		//updates value from stdin
 				MemArray[pointer + GPR1 + 2] = Value;		//updates MemArray
 				break;
@@ -1984,7 +1981,8 @@ void ISRinputCompletionInterrupt()
 
 // ************************************************************
 // Function: ISRoutputCompletionInterrupt
-//
+// Created by: Brian Tejada
+// Worked on by: Jake Terren
 // Task Description:
 //	read PID of the process completing the io_putc operation
 //	display one character on the monitor (output device)
@@ -2013,7 +2011,6 @@ void ISRoutputCompletionInterrupt()
 	long countDown = 5;
 	long countUp = 2;
 	
-
 	waitPrev = NULL;		//declares waitPrev to null
 	readyPrev = NULL;		//declared readyPrev to null
 	waitCurrent = whead;		//defines waitCurrent to whead
@@ -2095,6 +2092,8 @@ void ISRoutputCompletionInterrupt()
 }  // end of ISRoutputCompletionInterrupt() function
 
 // ************************************************************
+// Author: Cam Turner
+//
 // Function: TerminateProcess
 //		recover all resources allocated to the process
 //
@@ -2129,7 +2128,7 @@ void terminateProcess(long PCBptr)
 
 // ************************************************************
 // Function: memAllocSystemCall()
-// allocate memory for the system
+//  Worked on by: Jake Terren
 //
 // Task Description:
 //	allocate memory to system calls
@@ -2171,7 +2170,7 @@ long memAllocSystemCall()
 
 // ************************************************************
 // Function: memFreeSystemCall()
-//		recover all resources allocated to the previous systemcall
+//		Worked on by: Jake Terren
 //
 // Task Description:
 //	release memory resources
@@ -2195,18 +2194,21 @@ long memFreeSystemCall()
 		size = 2;
 	}
 
-	gpr[0] = FreeUserMemory(sp, size); 
+	gpr[0] = FreeUserMemory(gpr[1], size); 
 
 	printf("memFreeSystemCall has been called, displaying GPR 0 - 2: %ld, %ld, %ld,", gpr[0], gpr[1], gpr[2]);
 	return gpr[0];	//return gpr to satisfy params
 }
 
 // ************************************************************
+// Author: Brian Tejada
+//
 // Function: io_getcSystemCall()
 //		pass information to system call
 //
 // Task Description:
-//	pass information from program to system calls
+//	returns the Input Operation Event Code to inform Main() 
+//		that a process is requesting Input Completion
 //
 // Input Parameters
 //	None
@@ -2220,7 +2222,22 @@ long io_getcSystemCall ()
 	return Input_Operation_Event_Code;
 } // end of io_getc system call
 
-//brian Creations
+// ************************************************************
+// Author: Brian Tejada
+//
+// Function: io_putcSystemCall()
+//		pass information to system call
+//
+// Task Description:
+//	returns the Output Operation Event Code to inform Main() 
+//		that a process is requesting Output Completion
+//
+// Input Parameters
+//	None
+//
+// Output Parameters
+//	Returns the operand of the function
+// ************************************************************
 long io_putcSystemCall ()
 {
 	//Return start of output operation event code;
@@ -2228,6 +2245,8 @@ long io_putcSystemCall ()
 }  // end of io_putc system call
 
 // ************************************************************
+// Author: Cam Turner
+//
 // Function: searchAndRemovePCBFromWQ
 //
 // Task Description:
@@ -2283,7 +2302,9 @@ long searchAndRemovePCBFromWQ(long pid)
 }
 
 // ************************************************************
-// Function: dispacter
+// Author: Cam Turner
+//
+// Function: Dispacter
 //		sets all of the values for the gpr's
 //
 // Task Description:
@@ -2314,7 +2335,9 @@ void Dispatcher(long PCBPtr)
 }
 
 // ************************************************************
-// Function: saveContext()
+// Author: Cam Turner
+//
+// Function: saveContext
 //		save the information to the general purpose registers
 //
 // Task Description:
@@ -2343,11 +2366,13 @@ void saveContext(long PCBPtr)
 }
 
 // ************************************************************
+// Author: Brian Tejada 
 // Function: printWaitingQueue
-//		print all of the nodes within the WQ
+//		print all of the nodes within the Waiting Queue
 //
 // Task Description:
-//	use a loop to iterate through the collection and print the values
+//	use a loop to iterate through the collection and print 
+//		the contents of each Node starting with the head
 //
 // Input Parameters
 //	head node pointer
@@ -2367,11 +2392,14 @@ long printWaitingQueue(struct WaitingNode *n)
 }
 
 // ************************************************************
+// Author: Brian Tejada
+//
 // Function: printReadyQueue
-//		print the contents of the ready queue
+//		print the contents of the Ready queue
 //
 // Task Description:
-//	iterate through the collection and print the contents of each node
+//	iterate through the collection and print 
+//		the contents of each node starting wiht the head
 //
 // Input Parameters
 // 	ReadyQueue node pointing to head
@@ -2391,11 +2419,14 @@ long printReadyQueue(struct ReadyNode *n)
 }
 
 // ************************************************************
+// Author: Brian Tejada
+//
 // Function: SelectProcessFromRQ()
 //		select a specific PCB from the RQ
 //
 // Task Description:
-//	iterate through the collection looking for a specific PCB head
+//	Select and remove the process with the highest priority from the Ready Queue
+//		to give it to the CPU()
 //
 // Input Parameters
 //	None
@@ -2430,13 +2461,13 @@ long SelectProcessFromRQ()
 	{
 		RQ = rhead -> readyProcess;		//increment RQ
 	}
-	
+
 	return(PCBptr);		//return PCBptr to call
 }//end of SelectProcessFromRQ()
 
 // ************************************************************
 // Function: fetchProgInfo
-//
+//	Created by: Jake Terren
 // Task Description:
 //	Saves info for a process about to enter CPU into a 
 //	global structure CurrProg that holds addresses, size, and PID.
