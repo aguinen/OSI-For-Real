@@ -1619,7 +1619,7 @@ long InsertIntoRQ(long PCBptr) //Need to modify based on changes to local variab
 	}
 
 	MemArray[PCBptr + STATE] = READY_STATE;		//Define MainMemory by PCBptr with nominal state
-	//MemArray[PCBptr + NEXT_PCB_POINTER] = END_OF_LIST;		//define memarry location with EOL constant
+	MemArray[PCBptr + NEXT_PCB_POINTER] = END_OF_LIST;		//define memarry location with EOL constant
 
 	if(RQ == END_OF_LIST)	//check to see if RQ contains a process
 	{
